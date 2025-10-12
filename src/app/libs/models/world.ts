@@ -1,4 +1,8 @@
-interface World {
+import { Civilization } from "./civilization";
+import { Food } from "./food";
+import { Individual } from "./individual";
+
+export interface World {
   width: number;
   height: number;
   individuals: Individual[];

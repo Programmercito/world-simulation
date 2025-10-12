@@ -1,4 +1,4 @@
-export class CivilizationnFactory {
+export class CivilizationFactory {
     create(): Civilization {
         return {
             id: crypto.randomUUID(),

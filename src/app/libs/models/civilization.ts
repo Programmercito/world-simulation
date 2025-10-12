@@ -1,4 +1,4 @@
-interface Civilization {
+export interface Civilization {
   id: string;
   name: string;
   color: string;

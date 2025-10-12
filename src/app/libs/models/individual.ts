@@ -1,4 +1,4 @@
-interface Individual {
+export interface Individual {
   id: string;
   name: string;
   race: string;
