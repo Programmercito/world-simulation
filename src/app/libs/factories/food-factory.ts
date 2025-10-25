@@ -1,3 +1,5 @@
+import { Food } from "../models/food";
+
 export class FoodFactory {
     createRandomFood(): Food {
         return {

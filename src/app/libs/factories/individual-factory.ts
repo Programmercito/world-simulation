@@ -1,3 +1,5 @@
+import { Individual } from "../models/individual";
+
 export class IndividualFactory {
 
     createIndividual(civilizationId: string, race: string, color: string, generation: number = 0): Individual {

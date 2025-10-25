@@ -1,3 +1,5 @@
+import { Civilization } from "../models/civilization";
+
 export class CivilizationFactory {
     create(): Civilization {
         return {
