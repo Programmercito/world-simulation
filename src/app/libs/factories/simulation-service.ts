@@ -4,6 +4,7 @@ import { FoodFactory } from '../factories/food-factory';
 import { World } from '../models/world';
 import { Individual } from '../models/individual';
 import { Food } from '../models/food';
+import { ProcessWorld } from '../services/ia/process-world';
 
 export class SimulationService {
     private world: World;
@@ -11,6 +12,7 @@ export class SimulationService {
     private worldFactory = new WorldFactory();
     private individualFactory = new IndividualFactory();
     private foodFactory = new FoodFactory();
+    private processWorld = new ProcessWorld();
     private lastTimestamp = 0;
     private isRunning = false;
 
@@ -67,7 +69,7 @@ export class SimulationService {
             individual.hunger += 0.5;
 
             // Lógica de estado (IA simple)
-            this.evaluateState(individual);
+            this.processWorld.processIndividual(individual, this.world);
 
             // Mover al individuo
             this.moveIndividual(individual);
