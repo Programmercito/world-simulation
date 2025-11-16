@@ -44,7 +44,7 @@ export class WorldFactory {
             individuals,
             foodSources,
             tick: 0,
-            cycleDurationMs: 100,
+            cycleDurationMs: 20,
             foodSpawnRate: 0.1,
             maxPopulation: 500,
         };

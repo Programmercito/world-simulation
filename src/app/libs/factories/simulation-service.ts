@@ -101,7 +101,11 @@ export class SimulationService {
      */
     private render() {
         // Limpiar el canvas
-        this.ctx.clearRect(0, 0, this.world.width, this.world.height);
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
+        // Escalar para que quepa en el canvas de 1000x1000
+        this.ctx.save();
+        this.ctx.scale(0.5, 0.5);
 
         // Dibujar comida
         this.world.foodSources.forEach(food => {
@@ -118,6 +122,8 @@ export class SimulationService {
             this.ctx.arc(individual.x, individual.y, individual.size, 0, 2 * Math.PI);
             this.ctx.fill();
         });
+
+        this.ctx.restore();
     }
 
     /**
