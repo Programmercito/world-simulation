@@ -26,7 +26,7 @@ export class IndividualFactory {
 
             // Capacidades físicas
             speed: 5 + Math.random() * 5, // entre 5 y 10
-            visionRange: 50 + Math.random() * 100, // entre 50 y 150
+            visionRange: 200 + Math.random() * 400, // entre 200 y 600
             strength: 10 + Math.random() * 20, // entre 10 y 30
             fertility: true,
 
@@ -44,13 +44,13 @@ export class IndividualFactory {
             generation,
 
             // IA
-            currentState: "idle",
+            currentState: "seekingFood",
             targetId: undefined,
             path: [],
 
             // Visualización
             color,
-            size: 5 + Math.random() * 5 // entre 5 y 10 px
+            size: 10 + Math.random() * 10 // entre 10 y 20 px
         };
     }
 }

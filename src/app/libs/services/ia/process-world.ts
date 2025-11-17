@@ -23,13 +23,13 @@ export class ProcessWorld {
     const effectiveVisionRange = individual.visionRange * visionMultiplier;
 
     // Usar resiliencia para decidir umbrales de hambre y energía
-    const hungerThreshold = 60 - (individual.dna.resilience - 0.5) * 20; // Resiliente tiene hambre más tarde
-    const energyThreshold = 60 - (individual.dna.resilience - 0.5) * 20; // Resiliente busca reproducir con menos energía
+    const hungerThreshold = 30 - (individual.dna.resilience - 0.5) * 10;
+    const energyThreshold = 70 - (individual.dna.resilience - 0.5) * 10;
 
     // Prioridad 1: Si tienes hambre, busca comida.
     if (individual.hunger > hungerThreshold) {
       individual.currentState = 'seekingFood';
-    } else if (individual.age > 18 && individual.energy > energyThreshold && individual.cooldownUntil < world.tick) {
+    } else if (individual.age > 5 && individual.energy > energyThreshold && individual.cooldownUntil < world.tick) {
       // Prioridad 2: Si tienes energía y edad, busca reproducirte.
       individual.currentState = 'seekingMate';
       individual.targetId = undefined; // Olvida la comida si ahora busca pareja

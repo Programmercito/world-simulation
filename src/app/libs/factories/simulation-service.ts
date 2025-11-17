@@ -19,7 +19,7 @@ export class SimulationService {
     constructor(canvasContext: CanvasRenderingContext2D) {
         this.ctx = canvasContext;
         // Inicializamos el mundo al crear el servicio
-        this.world = this.worldFactory.create(3, 15, 200);
+        this.world = this.worldFactory.create(3, 20, 400);
     }
 
     public start() {
@@ -63,12 +63,10 @@ export class SimulationService {
         this.world.individuals.forEach(individual => {
             if (!individual.isAlive) return;
 
-            // Actualizar atributos básicos
-            individual.age += 0.1; // La edad avanza en cada tick
-            individual.energy -= 1; // Cuesta energía existir
-            individual.hunger += 0.5;
-
-            // Lógica de estado (IA simple)
+        // Actualizar atributos básicos
+        individual.age += 0.01; // La edad avanza en cada tick
+        individual.energy -= 0.1; // Cuesta energía existir
+        individual.hunger += 0.15;            // Lógica de estado (IA simple)
             this.processWorld.processIndividual(individual, this.world);
 
             // Mover al individuo
@@ -78,7 +76,7 @@ export class SimulationService {
             this.handleEating(individual);
 
             // Comprobar si muere
-            if (individual.energy <= 0 || individual.hunger >= 100 || individual.age >= individual.maxAge) {
+            if (individual.age >= individual.maxAge) {
                 individual.isAlive = false;
             }
         });
@@ -90,9 +88,9 @@ export class SimulationService {
         this.world.individuals = this.world.individuals.filter(ind => ind.isAlive);
         this.world.foodSources = this.world.foodSources.filter(food => !food.isConsumed);
 
-        // Generar nueva comida
-        if (Math.random() < this.world.foodSpawnRate) {
-            this.world.foodSources.push(this.foodFactory.createRandomFood());
+        // Generar nueva comida (solo si no hay demasiada)
+        if (this.world.foodSources.length < 1000 && Math.random() < this.world.foodSpawnRate) {
+            this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         }
     }
 
@@ -103,15 +101,11 @@ export class SimulationService {
         // Limpiar el canvas
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-        // Escalar para que quepa en el canvas de 1000x1000
-        this.ctx.save();
-        this.ctx.scale(0.5, 0.5);
-
         // Dibujar comida
         this.world.foodSources.forEach(food => {
             this.ctx.fillStyle = 'lightgreen';
             this.ctx.beginPath();
-            this.ctx.arc(food.x, food.y, 3, 0, 2 * Math.PI);
+            this.ctx.arc(food.x, food.y, 5, 0, 2 * Math.PI);
             this.ctx.fill();
         });
 
@@ -122,8 +116,6 @@ export class SimulationService {
             this.ctx.arc(individual.x, individual.y, individual.size, 0, 2 * Math.PI);
             this.ctx.fill();
         });
-
-        this.ctx.restore();
     }
 
     /**
@@ -245,8 +237,9 @@ export class SimulationService {
                 if (ind1.civilizationId !== ind2.civilizationId) continue;
 
                 const distance = Math.hypot(ind1.x - ind2.x, ind1.y - ind2.y);
-                if (distance < (ind1.size + ind2.size)) {
+                if (distance < (ind1.size + ind2.size) * 2) {
                     this.reproduce(ind1, ind2);
+                    break;
                 }
             }
         }
@@ -279,10 +272,14 @@ export class SimulationService {
         this.world.individuals.push(newIndividual);
 
         // Poner a los padres en "cooldown" para que no se reproduzcan instantáneamente de nuevo
-        const cooldownTicks = 50; // 50 ticks de espera
+        const cooldownTicks = 100;
         parent1.cooldownUntil = this.world.tick + cooldownTicks;
         parent2.cooldownUntil = this.world.tick + cooldownTicks;
+        parent1.offspringCount++;
+        parent2.offspringCount++;
         parent1.currentState = 'idle';
         parent2.currentState = 'idle';
+        parent1.energy -= 20;
+        parent2.energy -= 20;
     }
 }

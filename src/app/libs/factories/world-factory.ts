@@ -12,9 +12,9 @@ export class WorldFactory {
     private foodFactory = new FoodFactory();
 
     create(
-        initialCivilizations: number = 2,
-        initialIndividualsPerCivilization: number = 10,
-        initialFoodSources: number = 100
+        initialCivilizations: number = 3,
+        initialIndividualsPerCivilization: number = 20,
+        initialFoodSources: number = 800
     ): World {
         const width = 2000;
         const height = 2000;
@@ -34,7 +34,7 @@ export class WorldFactory {
 
         const foodSources: Food[] = [];
         for (let i = 0; i < initialFoodSources; i++) {
-            foodSources.push(this.foodFactory.createRandomFood());
+            foodSources.push(this.foodFactory.createRandomFood(width, height));
         }
 
         return {
@@ -44,8 +44,8 @@ export class WorldFactory {
             individuals,
             foodSources,
             tick: 0,
-            cycleDurationMs: 20,
-            foodSpawnRate: 0.1,
+            cycleDurationMs: 50,
+            foodSpawnRate: 0.05,
             maxPopulation: 500,
         };
     }
