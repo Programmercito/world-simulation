@@ -14,7 +14,7 @@ export class WorldFactory {
     create(
         initialCivilizations: number = 3,
         initialIndividualsPerCivilization: number = 20,
-        initialFoodSources: number = 800
+        initialFoodSources: number = 1200
     ): World {
         const width = 2000;
         const height = 2000;
@@ -45,7 +45,7 @@ export class WorldFactory {
             foodSources,
             tick: 0,
             cycleDurationMs: 50,
-            foodSpawnRate: 0.05,
+            foodSpawnRate: 0.15,
             maxPopulation: 500,
         };
     }

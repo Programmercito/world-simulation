@@ -64,9 +64,9 @@ export class SimulationService {
             if (!individual.isAlive) return;
 
         // Actualizar atributos básicos
-        individual.age += 0.01; // La edad avanza en cada tick
-        individual.energy -= 0.1; // Cuesta energía existir
-        individual.hunger += 0.15;            // Lógica de estado (IA simple)
+        individual.age += 0.005; // La edad avanza en cada tick
+        individual.energy -= 0.05; // Cuesta energía existir
+        individual.hunger += 0.08;            // Lógica de estado (IA simple)
             this.processWorld.processIndividual(individual, this.world);
 
             // Mover al individuo
@@ -89,7 +89,7 @@ export class SimulationService {
         this.world.foodSources = this.world.foodSources.filter(food => !food.isConsumed);
 
         // Generar nueva comida (solo si no hay demasiada)
-        if (this.world.foodSources.length < 1000 && Math.random() < this.world.foodSpawnRate) {
+        if (this.world.foodSources.length < 2000 && Math.random() < this.world.foodSpawnRate) {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         }
     }
@@ -112,10 +112,17 @@ export class SimulationService {
         // Dibujar individuos
         this.world.individuals.forEach(individual => {
             this.ctx.fillStyle = individual.color;
-            this.ctx.beginPath();
-            this.ctx.arc(individual.x, individual.y, individual.size, 0, 2 * Math.PI);
-            this.ctx.fill();
+            this.drawShape(individual);
         });
+
+        // Dibujar estadísticas
+        const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText(`Población: ${this.world.individuals.length}`, 10, 20);
+        this.ctx.fillText(`Comida: ${this.world.foodSources.length}`, 10, 40);
+        this.ctx.fillText(`Buscando pareja: ${seeking}`, 10, 60);
+        this.ctx.fillText(`Tick: ${this.world.tick}`, 10, 80);
     }
 
     /**
@@ -267,19 +274,56 @@ export class SimulationService {
         // Posicionar al bebé cerca de los padres
         newIndividual.x = parent1.x;
         newIndividual.y = parent1.y;
+        newIndividual.energy = 80;
+        newIndividual.hunger = 10;
 
         // Añadir al mundo
         this.world.individuals.push(newIndividual);
 
         // Poner a los padres en "cooldown" para que no se reproduzcan instantáneamente de nuevo
-        const cooldownTicks = 100;
+        const cooldownTicks = 50;
         parent1.cooldownUntil = this.world.tick + cooldownTicks;
         parent2.cooldownUntil = this.world.tick + cooldownTicks;
         parent1.offspringCount++;
         parent2.offspringCount++;
         parent1.currentState = 'idle';
         parent2.currentState = 'idle';
-        parent1.energy -= 20;
-        parent2.energy -= 20;
+        parent1.energy -= 10;
+        parent2.energy -= 10;
+    }
+
+    private drawShape(individual: Individual) {
+        const x = individual.x;
+        const y = individual.y;
+        const size = individual.size;
+
+        this.ctx.beginPath();
+        
+        switch (individual.shape) {
+            case 'circle':
+                this.ctx.arc(x, y, size, 0, 2 * Math.PI);
+                break;
+            
+            case 'square':
+                this.ctx.rect(x - size, y - size, size * 2, size * 2);
+                break;
+            
+            case 'triangle':
+                this.ctx.moveTo(x, y - size);
+                this.ctx.lineTo(x + size, y + size);
+                this.ctx.lineTo(x - size, y + size);
+                this.ctx.closePath();
+                break;
+            
+            case 'diamond':
+                this.ctx.moveTo(x, y - size);
+                this.ctx.lineTo(x + size, y);
+                this.ctx.lineTo(x, y + size);
+                this.ctx.lineTo(x - size, y);
+                this.ctx.closePath();
+                break;
+        }
+        
+        this.ctx.fill();
     }
 }

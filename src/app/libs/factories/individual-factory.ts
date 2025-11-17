@@ -50,7 +50,13 @@ export class IndividualFactory {
 
             // Visualización
             color,
-            size: 10 + Math.random() * 10 // entre 10 y 20 px
+            size: 10 + Math.random() * 10, // entre 10 y 20 px
+            shape: this.getRandomShape() as 'circle' | 'square' | 'triangle' | 'diamond'
         };
+    }
+
+    private getRandomShape(): string {
+        const shapes = ['circle', 'square', 'triangle', 'diamond'];
+        return shapes[Math.floor(Math.random() * shapes.length)];
     }
 }

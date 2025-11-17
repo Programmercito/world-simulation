@@ -43,4 +43,5 @@ export interface Individual {
   // Visualización
   color: string;
   size: number;
+  shape: 'circle' | 'square' | 'triangle' | 'diamond';
 }
