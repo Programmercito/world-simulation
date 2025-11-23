@@ -1,1 +1,12 @@
-<canvas #worldCanvas id="world" width="2000" height="2000"></canvas>
+<div class="canvas-wrapper">
+	<div class="canvas-info">
+		<div class="canvas-size">Canvas: <span id="canvasSize" #canvasSize>2000x2000</span></div>
+		<div class="stats" #statsDiv>
+			<div class="stat"><strong>Población:</strong> <span id="population">0</span></div>
+			<div class="stat"><strong>Comida:</strong> <span id="food">0</span></div>
+			<div class="stat"><strong>Buscando pareja:</strong> <span id="seeking">0</span></div>
+			<div class="stat"><strong>Tick:</strong> <span id="tick">0</span></div>
+		</div>
+	</div>
+	<canvas #worldCanvas id="world" width="2000" height="2000"></canvas>
+</div>

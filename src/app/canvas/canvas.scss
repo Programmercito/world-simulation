@@ -3,11 +3,35 @@
       overflow: hidden;
       background-color: #111;
     }
+    .canvas-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px;
+    }
     canvas {
       display: block;
       border: 2px solid #444;
       margin: auto;
       background-color: #222;
-      transform: scale(0.5);
-      transform-origin: top left;
+      /* The logical canvas internal size remains 2000x2000 (element attributes).
+         Use CSS width/height to control visual scale so layout and alignment behave
+         according to the visual size of the canvas element. */
+      width: 1000px; /* display size */
+      height: 1000px; /* display size */
+      max-width: 100%;
+      box-sizing: content-box;
     }
+    .canvas-info { display:flex; gap: 12px; align-items:center; }
+    .stats {
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 6px;
+      width: 220px;
+      font-family: Arial, sans-serif;
+    }
+    .stats .stat { margin-bottom: 6px; }
+    .canvas-size { color: #fff; font-size: 14px; margin-right: 12px; }

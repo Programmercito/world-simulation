@@ -7,6 +7,11 @@ import { Food } from '../models/food';
 import { ProcessWorld } from '../services/ia/process-world';
 
 export class SimulationService {
+    public onStats?: (stats: { population: number; food: number; seekingMate: number; tick: number }) => void;
+    public getStats() {
+        const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
+        return { population: this.world.individuals.length, food: this.world.foodSources.length, seekingMate: seeking, tick: this.world.tick };
+    }
     private world: World;
     private ctx: CanvasRenderingContext2D;
     private worldFactory = new WorldFactory();
@@ -92,6 +97,10 @@ export class SimulationService {
         if (this.world.foodSources.length < 2000 && Math.random() < this.world.foodSpawnRate) {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         }
+
+        // Enviar estadísticas al callback si está registrado
+        const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
+        this.onStats?.({ population: this.world.individuals.length, food: this.world.foodSources.length, seekingMate: seeking, tick: this.world.tick });
     }
 
     /**
@@ -115,14 +124,7 @@ export class SimulationService {
             this.drawShape(individual);
         });
 
-        // Dibujar estadísticas
-        const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '16px Arial';
-        this.ctx.fillText(`Población: ${this.world.individuals.length}`, 10, 20);
-        this.ctx.fillText(`Comida: ${this.world.foodSources.length}`, 10, 40);
-        this.ctx.fillText(`Buscando pareja: ${seeking}`, 10, 60);
-        this.ctx.fillText(`Tick: ${this.world.tick}`, 10, 80);
+        // No draw stats in canvas anymore; stats are displayed in the HTML UI
     }
 
     /**
