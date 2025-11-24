@@ -35,11 +35,17 @@ export class ProcessWorld {
         if (closestFood) {
           individual.targetId = closestFood.id;
         } else {
-          // No hay comida, buscar presa débil
-          const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
-          if (prey) {
-            individual.currentState = 'hunting';
-            individual.targetId = prey.id;
+          // No hay comida visible, explorar el mundo buscándola
+          individual.currentState = 'exploring';
+          individual.targetId = undefined;
+          
+          // Si el hambre es extrema, considerar cazar
+          if (individual.hunger > 80) {
+            const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
+            if (prey) {
+              individual.currentState = 'hunting';
+              individual.targetId = prey.id;
+            }
           }
         }
       }

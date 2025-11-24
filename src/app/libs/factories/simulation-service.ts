@@ -211,6 +211,31 @@ export class SimulationService {
                     moveY = (dy / distance) * individual.speed;
                 }
             }
+        } else if (individual.currentState === 'exploring') {
+            // Movimiento de exploración: más direccional y persistente
+            if (!individual.explorationTarget) {
+                // Crear un punto objetivo aleatorio en el mundo
+                individual.explorationTarget = {
+                    x: Math.random() * this.world.width,
+                    y: Math.random() * this.world.height
+                };
+            }
+
+            const dx = individual.explorationTarget.x - individual.x;
+            const dy = individual.explorationTarget.y - individual.y;
+            const distance = Math.hypot(dx, dy);
+
+            // Si llegó al objetivo, crear uno nuevo
+            if (distance < 50) {
+                individual.explorationTarget = {
+                    x: Math.random() * this.world.width,
+                    y: Math.random() * this.world.height
+                };
+            } else {
+                // Moverse hacia el punto de exploración
+                moveX = (dx / distance) * individual.speed * 1.2; // Un poco más rápido al explorar
+                moveY = (dy / distance) * individual.speed * 1.2;
+            }
         } else if (individual.currentState === 'hunting' && individual.targetId) {
             const prey = this.world.individuals.find(i => i.id === individual.targetId && i.isAlive);
             if (prey) {

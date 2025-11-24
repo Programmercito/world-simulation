@@ -39,6 +39,7 @@ export interface Individual {
   currentState: string;
   targetId?: string;
   path?: { x: number; y: number }[];
+  explorationTarget?: { x: number; y: number };
 
   // Visualización
   color: string;
