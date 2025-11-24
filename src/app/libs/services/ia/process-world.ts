@@ -17,7 +17,8 @@ export class ProcessWorld {
     if (individual.fearLevel === undefined) individual.fearLevel = 0;
     
     // Reducir miedo gradualmente con el tiempo
-    individual.fearLevel = Math.max(0, individual.fearLevel - 0.01);
+    individual.fearLevel = (individual.fearLevel || 0) - 0.01;
+    individual.fearLevel = Math.max(0, individual.fearLevel);
 
     // Si el objetivo de comida ya no existe, lo olvidamos.
     if (individual.targetId && !world.foodSources.find(f => f.id === individual.targetId)) {
@@ -126,7 +127,7 @@ export class ProcessWorld {
     );
     
     if (threats.length > 0) {
-      individual.fearLevel = Math.min(1, individual.fearLevel + 0.2);
+      individual.fearLevel = Math.min(1, (individual.fearLevel || 0) + 0.2);
     }
   }
 
