@@ -14,11 +14,10 @@ export class WorldFactory {
     create(
         initialCivilizations: number = 6,
         initialIndividualsPerCivilization: number = 50,
-        initialFoodSources: number = 10
+        initialFoodSources: number = 10,
+        width: number = 2000,
+        height: number = 2000
     ): World {
-        const width = 2000;
-        const height = 2000;
-
         const civilizations: Civilization[] = [];
         for (let i = 0; i < initialCivilizations; i++) {
             civilizations.push(this.civilizationFactory.create());

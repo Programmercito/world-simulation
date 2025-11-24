@@ -1,31 +1,49 @@
 import { Component, AfterViewInit, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SimulationService } from '../libs/factories/simulation-service';
 
 @Component({
   selector: 'app-canvas',
-  imports: [],
+  imports: [CommonModule, FormsModule],
   templateUrl: './canvas.html',
   styleUrl: './canvas.scss'
 })
 export class Canvas implements AfterViewInit {
-  @ViewChild('worldCanvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('statsDiv', { static: true }) statsDiv!: ElementRef<HTMLDivElement>;
-  @ViewChild('canvasSize', { static: true }) canvasSize!: ElementRef<HTMLSpanElement>;
+  @ViewChild('worldCanvas') canvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('statsDiv') statsDiv!: ElementRef<HTMLDivElement>;
+  @ViewChild('canvasSize') canvasSize!: ElementRef<HTMLSpanElement>;
   private simulationService!: SimulationService;
 
+  // Propiedades de configuración
+  simulationStarted = false;
+  worldWidth = 2000;
+  worldHeight = 2000;
+  initialFood = 20;
+  initialCivilizations = 7;
+  initialIndividuals = 10;
+
   ngAfterViewInit() {
-    const canvasElement = this.canvas.nativeElement;
-    const ctx = canvasElement.getContext('2d');
-    if (ctx) {
-      this.simulationService = new SimulationService(ctx);
-      // Register the stats callback so we render stats outside the canvas
-      this.simulationService.onStats = (stats) => this.updateStats(stats);
-      // Set initial stats immediately
-      this.updateStats(this.simulationService.getStats());
-      this.simulationService.start();
-      // Update canvas size info
-      this.updateCanvasInfo();
-    }
+    // No iniciamos automáticamente, esperamos a que el usuario configure y presione el botón
+  }
+
+  startSimulation() {
+    this.simulationStarted = true;
+    // Esperamos un tick para que el canvas se renderice
+    setTimeout(() => {
+      const canvasElement = this.canvas.nativeElement;
+      const ctx = canvasElement.getContext('2d');
+      if (ctx) {
+        this.simulationService = new SimulationService(ctx, this.initialCivilizations, this.initialIndividuals, this.initialFood, this.worldWidth, this.worldHeight);
+        // Register the stats callback so we render stats outside the canvas
+        this.simulationService.onStats = (stats) => this.updateStats(stats);
+        // Set initial stats immediately
+        this.updateStats(this.simulationService.getStats());
+        this.simulationService.start();
+        // Update canvas size info
+        this.updateCanvasInfo();
+      }
+    }, 0);
   }
 
   private updateStats(stats: { population: number; food: number; seekingMate: number; tick: number }) {

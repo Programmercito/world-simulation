@@ -21,10 +21,10 @@ export class SimulationService {
     private lastTimestamp = 0;
     private isRunning = false;
 
-    constructor(canvasContext: CanvasRenderingContext2D) {
+    constructor(canvasContext: CanvasRenderingContext2D, civilizations?: number, individuals?: number, food?: number, width?: number, height?: number) {
         this.ctx = canvasContext;
-        // Inicializamos el mundo al crear el servicio (usa valores por defecto del factory)
-        this.world = this.worldFactory.create();
+        // Inicializamos el mundo al crear el servicio (usa valores por defecto del factory o los proporcionados)
+        this.world = this.worldFactory.create(civilizations, individuals, food, width, height);
     }
 
     public start() {
