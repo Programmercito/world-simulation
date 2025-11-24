@@ -39,6 +39,7 @@ export class SimulationService {
     private soundService = new SoundService();
     private lastTimestamp = 0;
     private isRunning = false;
+    private simulationStartTime = 0; // Timestamp de inicio para escasez progresiva
 
     constructor(canvasContext: CanvasRenderingContext2D, civilizations?: number, individuals?: number, food?: number, width?: number, height?: number, foodSpawnIntervalSeconds?: number) {
         this.ctx = canvasContext;
@@ -50,6 +51,7 @@ export class SimulationService {
         if (this.isRunning) return;
         this.isRunning = true;
         this.lastTimestamp = 0; // Reset timestamp
+        this.simulationStartTime = Date.now(); // Guardar tiempo de inicio
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
@@ -120,8 +122,26 @@ export class SimulationService {
         this.world.individuals = this.world.individuals.filter(ind => ind.isAlive);
         this.world.foodSources = this.world.foodSources.filter(food => !food.isConsumed);
 
-        // Generar nueva comida (solo si no hay demasiada)
-        if (this.world.foodSources.length < 2000 && Math.random() < this.world.foodSpawnRate) {
+        // SISTEMA DE ESCASEZ PROGRESIVA
+        // Calcular tiempo transcurrido en minutos
+        const elapsedMinutes = (Date.now() - this.simulationStartTime) / 60000;
+        
+        // Ajustar tasa de aparición de comida según tiempo transcurrido
+        let adjustedFoodSpawnRate = this.world.foodSpawnRate;
+        
+        if (elapsedMinutes >= 15 && elapsedMinutes < 30) {
+            // 15-30 min: reducir a la mitad (equivalente a duplicar intervalo)
+            adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.5;
+        } else if (elapsedMinutes >= 30 && elapsedMinutes < 60) {
+            // 30-60 min: reducir a 1/3 (equivalente a triplicar intervalo)
+            adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.33;
+        } else if (elapsedMinutes >= 60) {
+            // 60+ min: reducir a 1/4 (equivalente a cuadruplicar intervalo)
+            adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.25;
+        }
+
+        // Generar nueva comida (solo si no hay demasiada) con tasa ajustada
+        if (this.world.foodSources.length < 2000 && Math.random() < adjustedFoodSpawnRate) {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
             this.soundService.play('foodSpawn');
         }
