@@ -15,14 +15,14 @@ export class Canvas implements AfterViewInit {
   @ViewChild('canvasSize') canvasSize!: ElementRef<HTMLSpanElement>;
   private simulationService!: SimulationService;
 
-  // Propiedades de configuración
+  // Propiedades de configuración (optimizadas para mayor duración)
   simulationStarted = false;
   worldWidth = 2000;
   worldHeight = 2000;
-  initialFood = 20;
-  initialCivilizations = 7;
-  initialIndividuals = 10;
-  foodSpawnInterval = 5; // segundos
+  initialFood = 30; // Más comida inicial
+  initialCivilizations = 5; // Menos civilizaciones
+  initialIndividuals = 8; // Menos individuos por civilización
+  foodSpawnInterval = 8; // Aparece comida cada 8 segundos (menos frecuente)
   civilizations: Array<{name: string, color: string, population: number, kills: number}> = [];
   winner: {name: string, color: string, population: number, kills: number} | null = null;
 

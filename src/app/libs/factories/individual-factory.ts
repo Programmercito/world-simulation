@@ -24,8 +24,8 @@ export class IndividualFactory {
             health: 100,
             isAlive: true,
 
-            // Capacidades físicas
-            speed: 5 + Math.random() * 5, // entre 5 y 10
+            // Capacidades físicas (optimizadas para mayor duración)
+            speed: 3 + Math.random() * 3, // entre 3 y 6 (más lento = menos gasto)
             visionRange: 200 + Math.random() * 400, // entre 200 y 600
             strength: 10 + Math.random() * 20, // entre 10 y 30
             fertility: true,

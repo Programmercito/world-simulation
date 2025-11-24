@@ -40,6 +40,9 @@ export interface Individual {
   targetId?: string;
   path?: { x: number; y: number }[];
   explorationTarget?: { x: number; y: number };
+  lastFoodLocations?: { x: number; y: number; timestamp: number }[];
+  socialBond?: string; // ID de otro individuo con quien tiene vínculo
+  fearLevel?: number; // Nivel de miedo basado en amenazas recientes
 
   // Visualización
   color: string;

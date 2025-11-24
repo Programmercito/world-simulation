@@ -87,10 +87,15 @@ export class SimulationService {
         this.world.individuals.forEach(individual => {
             if (!individual.isAlive) return;
 
-        // Actualizar atributos básicos
-        individual.age += 0.005; // La edad avanza en cada tick
-        individual.energy -= 0.05; // Cuesta energía existir
-        individual.hunger += 0.08;            // Lógica de estado (IA simple)
+        // Actualizar atributos básicos (optimizado para mayor duración)
+        individual.age += 0.003; // Envejecen más lento
+        // Consumo de energía depende del estado (reducido)
+        const energyCost = individual.currentState === 'hunting' || individual.currentState === 'fleeing' ? 0.03 : 
+                          individual.currentState === 'exploring' ? 0.02 : 0.015;
+        individual.energy -= energyCost;
+        // Hambre aumenta más despacio
+        const hungerIncrease = individual.currentState === 'hunting' || individual.currentState === 'fleeing' ? 0.04 : 0.025;
+        individual.hunger += hungerIncrease;            // Lógica de estado (IA simple)
             this.processWorld.processIndividual(individual, this.world);
 
             // Mover al individuo
@@ -193,7 +198,53 @@ export class SimulationService {
         let moveX = 0;
         let moveY = 0;
 
-        if (individual.currentState === 'seekingFood' && individual.targetId) {
+        if (individual.currentState === 'fleeing') {
+            // Huir en dirección opuesta a las amenazas
+            const threats = this.world.individuals.filter(other =>
+                other.isAlive &&
+                other.civilizationId !== individual.civilizationId &&
+                Math.hypot(individual.x - other.x, individual.y - other.y) < individual.visionRange
+            );
+            
+            if (threats.length > 0) {
+                // Calcular dirección promedio de las amenazas
+                let avgThreatX = 0, avgThreatY = 0;
+                threats.forEach(threat => {
+                    avgThreatX += threat.x;
+                    avgThreatY += threat.y;
+                });
+                avgThreatX /= threats.length;
+                avgThreatY /= threats.length;
+                
+                // Huir en dirección opuesta
+                const dx = individual.x - avgThreatX;
+                const dy = individual.y - avgThreatY;
+                const distance = Math.hypot(dx, dy);
+                
+                if (distance > 0) {
+                    moveX = (dx / distance) * individual.speed * 1.8; // Huir rápido
+                    moveY = (dy / distance) * individual.speed * 1.8;
+                }
+            } else {
+                // Ya no hay amenazas visibles
+                moveX = (Math.random() - 0.5) * individual.speed;
+                moveY = (Math.random() - 0.5) * individual.speed;
+            }
+        } else if (individual.currentState === 'following' && individual.targetId) {
+            // Seguir a otro individuo (comportamiento social)
+            const target = this.world.individuals.find(i => i.id === individual.targetId && i.isAlive);
+            if (target) {
+                const dx = target.x - individual.x;
+                const dy = target.y - individual.y;
+                const distance = Math.hypot(dx, dy);
+                
+                // Mantener cierta distancia (no pegarse demasiado)
+                if (distance > individual.size * 3) {
+                    moveX = (dx / distance) * individual.speed * 0.8;
+                    moveY = (dy / distance) * individual.speed * 0.8;
+                }
+            }
+        } else if (individual.currentState === 'seekingFood' && individual.targetId) {
             const targetFood = this.world.foodSources.find(f => f.id === individual.targetId);
             if (targetFood) {
                 const dx = targetFood.x - individual.x;
@@ -282,10 +333,10 @@ export class SimulationService {
         if (targetFood) {
             const distance = Math.hypot(individual.x - targetFood.x, individual.y - targetFood.y);
             if (distance < individual.size) {
-                // Comer la comida
+                // Comer la comida (mayor beneficio)
                 targetFood.isConsumed = true;
-                individual.hunger = Math.max(0, individual.hunger - 50); // Reduce el hambre
-                individual.energy = Math.min(100, individual.energy + 20); // Gana energía
+                individual.hunger = Math.max(0, individual.hunger - 60);
+                individual.energy = Math.min(100, individual.energy + 35);
                 this.soundService.play('eat');
 
                 // Olvidar el objetivo y volver a evaluar estado en el próximo ciclo
@@ -312,14 +363,23 @@ export class SimulationService {
             const hunterPower = individual.strength + individual.energy + (individual.dna.aggression * 50);
             const preyPower = prey.strength + prey.energy + (prey.dna.aggression * 50);
 
-            if (hunterPower > preyPower) {
+            if (hunterPower > preyPower * 1.2) { // Necesita superioridad clara
                 // Victoria - el cazador consume a la presa
                 prey.isAlive = false;
-                individual.hunger = Math.max(0, individual.hunger - 70);
-                individual.energy = Math.min(100, individual.energy + prey.energy * 0.6);
+                individual.hunger = Math.max(0, individual.hunger - 80);
+                individual.energy = Math.min(100, individual.energy + prey.energy * 0.5);
                 this.soundService.play('kill');
                 individual.targetId = undefined;
                 individual.currentState = 'idle';
+                // Aumentar miedo en individuos cercanos de la civilización de la presa
+                this.world.individuals.filter(other => 
+                    other.isAlive &&
+                    other.civilizationId === prey.civilizationId &&
+                    Math.hypot(other.x - prey.x, other.y - prey.y) < 200
+                ).forEach(scared => {
+                    if (!scared.fearLevel) scared.fearLevel = 0;
+                    scared.fearLevel = Math.min(1, scared.fearLevel + 0.5);
+                });
 
                 // Actualizar stats de civilización
                 const hunterCiv = this.world.civilizations.find(c => c.id === individual.civilizationId);
@@ -340,19 +400,34 @@ export class SimulationService {
      */
     private handleReproduction() {
         const readyToMate = this.world.individuals.filter(
-            ind => ind.isAlive && ind.currentState === 'seekingMate'
+            ind => ind.isAlive && 
+                   ind.currentState === 'seekingMate' && 
+                   ind.energy > 50 && // Menos exigente
+                   ind.hunger < 50 // Menos exigente
         );
 
         for (let i = 0; i < readyToMate.length; i++) {
+            const ind1 = readyToMate[i];
+            
+            // Si tiene un targetId específico (pareja seleccionada), solo reproducirse con ese
+            if (ind1.targetId) {
+                const ind2 = readyToMate.find(other => other.id === ind1.targetId);
+                if (ind2 && ind1.civilizationId === ind2.civilizationId) {
+                    const distance = Math.hypot(ind1.x - ind2.x, ind1.y - ind2.y);
+                    if (distance < (ind1.size + ind2.size) * 2.5) {
+                        this.reproduce(ind1, ind2);
+                        continue;
+                    }
+                }
+            }
+            
+            // Buscar pareja cercana compatible
             for (let j = i + 1; j < readyToMate.length; j++) {
-                const ind1 = readyToMate[i];
                 const ind2 = readyToMate[j];
-
-                // Deben ser de la misma civilización y estar cerca
                 if (ind1.civilizationId !== ind2.civilizationId) continue;
 
                 const distance = Math.hypot(ind1.x - ind2.x, ind1.y - ind2.y);
-                if (distance < (ind1.size + ind2.size) * 2) {
+                if (distance < (ind1.size + ind2.size) * 2.5) {
                     this.reproduce(ind1, ind2);
                     break;
                 }
@@ -390,15 +465,15 @@ export class SimulationService {
         this.soundService.play('reproduction');
 
         // Poner a los padres en "cooldown" para que no se reproduzcan instantáneamente de nuevo
-        const cooldownTicks = 50;
+        const cooldownTicks = 80; // Cooldown más largo
         parent1.cooldownUntil = this.world.tick + cooldownTicks;
         parent2.cooldownUntil = this.world.tick + cooldownTicks;
         parent1.offspringCount++;
         parent2.offspringCount++;
         parent1.currentState = 'idle';
         parent2.currentState = 'idle';
-        parent1.energy -= 10;
-        parent2.energy -= 10;
+        parent1.energy -= 8; // Menos costo energético
+        parent2.energy -= 8;
     }
 
     private drawShape(individual: Individual) {
