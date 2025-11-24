@@ -26,17 +26,35 @@
 				<input type="number" [(ngModel)]="initialIndividuals" min="1" max="100" />
 			</label>
 		</div>
+		<div class="config-group">
+			<label>Aparición de comida cada (segundos, 0=nunca):
+				<input type="number" [(ngModel)]="foodSpawnInterval" min="0" max="60" step="0.1" />
+			</label>
+		</div>
 		<button class="start-btn" (click)="startSimulation()">Iniciar Simulación</button>
 	</div>
 	
 	<div class="canvas-info" *ngIf="simulationStarted">
 		<div class="canvas-size">Canvas: <span id="canvasSize" #canvasSize>2000x2000</span></div>
-		<div class="stats" #statsDiv>
-			<div class="stat"><strong>Población:</strong> <span id="population">0</span></div>
-			<div class="stat"><strong>Comida:</strong> <span id="food">0</span></div>
-			<div class="stat"><strong>Buscando pareja:</strong> <span id="seeking">0</span></div>
-			<div class="stat"><strong>Tick:</strong> <span id="tick">0</span></div>
-			<button class="add-food-btn" (click)="addFood()">+ Agregar Comida</button>
+		<div class="info-panels">
+			<div class="stats" #statsDiv>
+				<h4>Estadísticas</h4>
+				<div class="stat"><strong>Población:</strong> <span id="population">0</span></div>
+				<div class="stat"><strong>Comida:</strong> <span id="food">0</span></div>
+				<div class="stat"><strong>Buscando pareja:</strong> <span id="seeking">0</span></div>
+				<div class="stat"><strong>Tick:</strong> <span id="tick">0</span></div>
+				<button class="add-food-btn" (click)="addFood()">+ Agregar Comida</button>
+			</div>
+			<div class="civilizations-panel">
+				<h4>Civilizaciones</h4>
+				<div class="civ-list">
+					<div class="civ-item" *ngFor="let civ of civilizations">
+						<span class="civ-color" [style.background-color]="civ.color"></span>
+						<span class="civ-name">{{civ.name}}</span>
+						<span class="civ-count">{{civ.population}}</span>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	<canvas #worldCanvas id="world" [width]="worldWidth" [height]="worldHeight" *ngIf="simulationStarted"></canvas>

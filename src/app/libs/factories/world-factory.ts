@@ -16,7 +16,8 @@ export class WorldFactory {
         initialIndividualsPerCivilization: number = 50,
         initialFoodSources: number = 10,
         width: number = 2000,
-        height: number = 2000
+        height: number = 2000,
+        foodSpawnIntervalSeconds: number = 5
     ): World {
         const civilizations: Civilization[] = [];
         for (let i = 0; i < initialCivilizations; i++) {
@@ -36,6 +37,18 @@ export class WorldFactory {
             foodSources.push(this.foodFactory.createRandomFood(width, height));
         }
 
+        // Calcular foodSpawnRate basado en el intervalo en segundos
+        // cycleDurationMs = 50ms por tick
+        // Si foodSpawnIntervalSeconds = 5, queremos 1 comida cada 5 segundos = 5000ms
+        // Ticks en ese intervalo = 5000 / 50 = 100 ticks
+        // Probabilidad por tick = 1 / 100 = 0.01
+        const cycleDurationMs = 50;
+        let foodSpawnRate = 0;
+        if (foodSpawnIntervalSeconds > 0) {
+            const ticksPerInterval = (foodSpawnIntervalSeconds * 1000) / cycleDurationMs;
+            foodSpawnRate = 1 / ticksPerInterval;
+        }
+
         return {
             width,
             height,
@@ -43,8 +56,8 @@ export class WorldFactory {
             individuals,
             foodSources,
             tick: 0,
-            cycleDurationMs: 50,
-            foodSpawnRate: 0.15,
+            cycleDurationMs: cycleDurationMs,
+            foodSpawnRate: foodSpawnRate,
             maxPopulation: 500,
         };
     }

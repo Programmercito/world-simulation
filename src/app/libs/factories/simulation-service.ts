@@ -17,6 +17,13 @@ export class SimulationService {
         this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
     }
 
+    public getCivilizations() {
+        return this.world.civilizations.map(civ => {
+            const population = this.world.individuals.filter(ind => ind.isAlive && ind.civilizationId === civ.id).length;
+            return { name: civ.name, color: civ.color, population };
+        });
+    }
+
     private world: World;
     private ctx: CanvasRenderingContext2D;
     private worldFactory = new WorldFactory();
@@ -26,10 +33,10 @@ export class SimulationService {
     private lastTimestamp = 0;
     private isRunning = false;
 
-    constructor(canvasContext: CanvasRenderingContext2D, civilizations?: number, individuals?: number, food?: number, width?: number, height?: number) {
+    constructor(canvasContext: CanvasRenderingContext2D, civilizations?: number, individuals?: number, food?: number, width?: number, height?: number, foodSpawnIntervalSeconds?: number) {
         this.ctx = canvasContext;
         // Inicializamos el mundo al crear el servicio (usa valores por defecto del factory o los proporcionados)
-        this.world = this.worldFactory.create(civilizations, individuals, food, width, height);
+        this.world = this.worldFactory.create(civilizations, individuals, food, width, height, foodSpawnIntervalSeconds);
     }
 
     public start() {

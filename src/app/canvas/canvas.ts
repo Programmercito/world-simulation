@@ -22,6 +22,8 @@ export class Canvas implements AfterViewInit {
   initialFood = 20;
   initialCivilizations = 7;
   initialIndividuals = 10;
+  foodSpawnInterval = 5; // segundos
+  civilizations: Array<{name: string, color: string, population: number}> = [];
 
   ngAfterViewInit() {
     // No iniciamos automáticamente, esperamos a que el usuario configure y presione el botón
@@ -34,11 +36,13 @@ export class Canvas implements AfterViewInit {
       const canvasElement = this.canvas.nativeElement;
       const ctx = canvasElement.getContext('2d');
       if (ctx) {
-        this.simulationService = new SimulationService(ctx, this.initialCivilizations, this.initialIndividuals, this.initialFood, this.worldWidth, this.worldHeight);
+        this.simulationService = new SimulationService(ctx, this.initialCivilizations, this.initialIndividuals, this.initialFood, this.worldWidth, this.worldHeight, this.foodSpawnInterval);
         // Register the stats callback so we render stats outside the canvas
         this.simulationService.onStats = (stats) => this.updateStats(stats);
         // Set initial stats immediately
         this.updateStats(this.simulationService.getStats());
+        // Cargar civilizaciones
+        this.civilizations = this.simulationService.getCivilizations();
         this.simulationService.start();
         // Update canvas size info
         this.updateCanvasInfo();
@@ -57,6 +61,10 @@ export class Canvas implements AfterViewInit {
     if (elFood) elFood.innerText = String(stats.food);
     if (elSeeking) elSeeking.innerText = String(stats.seekingMate);
     if (elTick) elTick.innerText = String(stats.tick);
+    // Actualizar población de civilizaciones
+    if (this.simulationService) {
+      this.civilizations = this.simulationService.getCivilizations();
+    }
   }
 
   private updateCanvasInfo() {
