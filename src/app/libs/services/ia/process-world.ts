@@ -28,52 +28,78 @@ export class ProcessWorld {
 
     // Prioridad 1: Si tienes hambre, busca comida.
     if (individual.hunger > hungerThreshold) {
-      individual.currentState = 'seekingFood';
-      // Si no tiene objetivo de comida, busca el más cercano
-      if (!individual.targetId) {
+      // Si ya está explorando y tiene hambre, mantener el estado de exploración
+      if (individual.currentState === 'exploring') {
+        // Verificar si ahora puede ver comida
+        const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
+        if (closestFood) {
+          individual.currentState = 'seekingFood';
+          individual.targetId = closestFood.id;
+          individual.explorationTarget = undefined;
+        }
+        // Si el hambre es extrema (>90), considerar cazar
+        else if (individual.hunger > 90) {
+          const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
+          if (prey) {
+            individual.currentState = 'hunting';
+            individual.targetId = prey.id;
+            individual.explorationTarget = undefined;
+          }
+        }
+        // Sino, continuar explorando (no cambiar estado)
+      }
+      // Si está cazando, mantener el estado hasta completar
+      else if (individual.currentState === 'hunting') {
+        // Verificar si la presa sigue viva
+        const prey = world.individuals.find(i => i.id === individual.targetId && i.isAlive);
+        if (!prey) {
+          // Presa perdida, volver a buscar comida o explorar
+          const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
+          if (closestFood) {
+            individual.currentState = 'seekingFood';
+            individual.targetId = closestFood.id;
+          } else {
+            individual.currentState = 'exploring';
+            individual.targetId = undefined;
+          }
+        }
+      }
+      // Si está buscando comida pero perdió el objetivo
+      else if (individual.currentState === 'seekingFood' && !individual.targetId) {
         const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
         if (closestFood) {
           individual.targetId = closestFood.id;
         } else {
-          // No hay comida visible, explorar el mundo buscándola
+          // No hay comida visible, cambiar a exploración
           individual.currentState = 'exploring';
           individual.targetId = undefined;
-          
-          // Si el hambre es extrema, considerar cazar
-          if (individual.hunger > 80) {
-            const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
-            if (prey) {
-              individual.currentState = 'hunting';
-              individual.targetId = prey.id;
-            }
-          }
+        }
+      }
+      // Si no está en ningún estado de búsqueda de comida, iniciarlo
+      else if (individual.currentState !== 'seekingFood' && individual.currentState !== 'hunting') {
+        const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
+        if (closestFood) {
+          individual.currentState = 'seekingFood';
+          individual.targetId = closestFood.id;
+        } else {
+          // No hay comida visible, empezar a explorar
+          individual.currentState = 'exploring';
+          individual.targetId = undefined;
         }
       }
     } else if (individual.age > 3 && individual.energy > energyThreshold && individual.cooldownUntil < world.tick) {
       // Prioridad 2: Si tienes energía y edad, busca reproducirte.
       individual.currentState = 'seekingMate';
       individual.targetId = undefined; // Olvida la comida si ahora busca pareja
+      individual.explorationTarget = undefined; // Olvida exploración
     } else {
       // Si no, deambula.
       individual.currentState = 'wandering';
       individual.targetId = undefined;
+      individual.explorationTarget = undefined;
     }
 
-    // Lógica de acción basada en el estado
-    if (individual.currentState === 'seekingFood') {
-      // Si no tiene un objetivo, busca el más cercano dentro del rango efectivo
-      if (!individual.targetId) {
-        const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
-        if (closestFood) {
-          individual.targetId = closestFood.id;
-        }
-      }
-    } else if (individual.currentState === 'seekingMate') {
-      // Usar agresión para decidir si buscar pareja agresivamente (más cerca)
-      const mateRange = individual.visionRange * (1 + (individual.dna.aggression - 0.5) * 0.3);
-      // Para simplicidad, no implementamos búsqueda de pareja específica aquí, se hace en handleReproduction
-    }
-    // ... otros estados
+    // Ya no necesitamos esta lógica duplicada porque se maneja arriba
   }
 
   private findClosestFood(individual: Individual, world: World, visionRange: number): Food | null {

@@ -143,12 +143,7 @@ export class SimulationService {
 
         // Dibujar individuos
         this.world.individuals.forEach(individual => {
-            // Color especial si está cazando
-            if (individual.currentState === 'hunting') {
-                this.ctx.fillStyle = '#FF0000'; // Rojo para cazadores
-            } else {
-                this.ctx.fillStyle = individual.color;
-            }
+            this.ctx.fillStyle = individual.color;
             this.drawShape(individual);
         });
 
