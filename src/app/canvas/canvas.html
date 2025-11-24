@@ -52,10 +52,31 @@
 						<span class="civ-color" [style.background-color]="civ.color"></span>
 						<span class="civ-name">{{civ.name}}</span>
 						<span class="civ-count">{{civ.population}}</span>
+						<span class="civ-kills" title="Kills">⚔️{{civ.kills}}</span>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 	<canvas #worldCanvas id="world" [width]="worldWidth" [height]="worldHeight" *ngIf="simulationStarted"></canvas>
+	
+	<!-- Modal de Victoria -->
+	<div class="victory-modal" *ngIf="winner" [style.width.px]="worldWidth">
+		<div class="victory-content">
+			<h1 class="victory-title">¡Victoria!</h1>
+			<h2 class="winner-name">{{winner.name}}</h2>
+			<p class="victory-subtitle">ha sobrevivido</p>
+			<div class="winner-stats">
+				<div class="stat-item">
+					<span class="stat-label">Población final:</span>
+					<span class="stat-value">{{winner.population}}</span>
+				</div>
+				<div class="stat-item">
+					<span class="stat-label">Kills totales:</span>
+					<span class="stat-value">{{winner.kills}}</span>
+				</div>
+			</div>
+			<button class="restart-btn" (click)="restart()">Reiniciar Simulación</button>
+		</div>
+	</div>
 </div>

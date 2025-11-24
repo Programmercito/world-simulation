@@ -25,7 +25,8 @@ export class CivilizationFactory {
             },
             population: Math.floor(Math.random() * 100),
             totalDeaths: 0,
-            totalBirths: 0
+            totalBirths: 0,
+            totalKills: 0
         };
     }
 

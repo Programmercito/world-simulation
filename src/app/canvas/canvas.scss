@@ -43,6 +43,7 @@
     .civ-color { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #555; }
     .civ-name { flex: 1; }
     .civ-count { color: #4CAF50; font-weight: bold; min-width: 30px; text-align: right; }
+    .civ-kills { color: #FF5722; font-size: 12px; margin-left: 6px; min-width: 35px; }
     .add-food-btn {
       background: #2196F3;
       color: white;
@@ -94,3 +95,90 @@
       margin-top: 10px;
     }
     .start-btn:hover { background: #45a049; }
+    
+    .victory-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      border: 4px solid #FFD700;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+      z-index: 1000;
+      max-width: 90%;
+    }
+    
+    .victory-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .victory-title {
+      color: #FFD700;
+      font-size: 4vw;
+      margin: 0;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+    }
+    
+    .winner-name {
+      color: #FFF;
+      font-size: 5vw;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+    
+    .victory-subtitle {
+      color: #FFD700;
+      font-size: 2.5vw;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    
+    .winner-stats {
+      display: flex;
+      gap: 30px;
+      margin: 20px 0;
+    }
+    
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .stat-label {
+      color: #AAA;
+      font-size: 1.2vw;
+    }
+    
+    .stat-value {
+      color: #4CAF50;
+      font-size: 2.5vw;
+      font-weight: bold;
+    }
+    
+    .restart-btn {
+      background: #FF9800;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.5vw;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    
+    .restart-btn:hover {
+      background: #F57C00;
+    }

@@ -22,4 +22,5 @@ export interface Civilization {
   population: number;
   totalDeaths: number;
   totalBirths: number;
+  totalKills?: number;
 }

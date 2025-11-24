@@ -5,6 +5,7 @@ import { World } from '../models/world';
 import { Individual } from '../models/individual';
 import { Food } from '../models/food';
 import { ProcessWorld } from '../services/ia/process-world';
+import { SoundService } from '../services/sound-service';
 
 export class SimulationService {
     public onStats?: (stats: { population: number; food: number; seekingMate: number; tick: number }) => void;
@@ -17,10 +18,15 @@ export class SimulationService {
         this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
     }
 
+    public playVictorySound() {
+        this.soundService.play('victory');
+    }
+
     public getCivilizations() {
         return this.world.civilizations.map(civ => {
             const population = this.world.individuals.filter(ind => ind.isAlive && ind.civilizationId === civ.id).length;
-            return { name: civ.name, color: civ.color, population };
+            const kills = civ.totalKills || 0;
+            return { name: civ.name, color: civ.color, population, kills };
         });
     }
 
@@ -30,6 +36,7 @@ export class SimulationService {
     private individualFactory = new IndividualFactory();
     private foodFactory = new FoodFactory();
     private processWorld = new ProcessWorld();
+    private soundService = new SoundService();
     private lastTimestamp = 0;
     private isRunning = false;
 
@@ -92,6 +99,9 @@ export class SimulationService {
             // Lógica de comer
             this.handleEating(individual);
 
+            // Lógica de caza
+            this.handleHunting(individual);
+
             // Comprobar si muere
             if (individual.age >= individual.maxAge) {
                 individual.isAlive = false;
@@ -108,6 +118,7 @@ export class SimulationService {
         // Generar nueva comida (solo si no hay demasiada)
         if (this.world.foodSources.length < 2000 && Math.random() < this.world.foodSpawnRate) {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
+            this.soundService.play('foodSpawn');
         }
 
         // Enviar estadísticas al callback si está registrado
@@ -132,7 +143,12 @@ export class SimulationService {
 
         // Dibujar individuos
         this.world.individuals.forEach(individual => {
-            this.ctx.fillStyle = individual.color;
+            // Color especial si está cazando
+            if (individual.currentState === 'hunting') {
+                this.ctx.fillStyle = '#FF0000'; // Rojo para cazadores
+            } else {
+                this.ctx.fillStyle = individual.color;
+            }
             this.drawShape(individual);
         });
 
@@ -195,6 +211,23 @@ export class SimulationService {
                     moveY = (dy / distance) * individual.speed;
                 }
             }
+        } else if (individual.currentState === 'hunting' && individual.targetId) {
+            const prey = this.world.individuals.find(i => i.id === individual.targetId && i.isAlive);
+            if (prey) {
+                const dx = prey.x - individual.x;
+                const dy = prey.y - individual.y;
+                const distance = Math.hypot(dx, dy);
+
+                // Moverse hacia la presa (más rápido por adrenalina)
+                if (distance > 1) {
+                    moveX = (dx / distance) * individual.speed * 1.5;
+                    moveY = (dy / distance) * individual.speed * 1.5;
+                }
+            } else {
+                // Presa murió o desapareció
+                individual.targetId = undefined;
+                individual.currentState = 'wandering';
+            }
         } else {
             // Movimiento aleatorio para 'wandering'
             moveX = (Math.random() - 0.5) * individual.speed;
@@ -233,10 +266,51 @@ export class SimulationService {
                 targetFood.isConsumed = true;
                 individual.hunger = Math.max(0, individual.hunger - 50); // Reduce el hambre
                 individual.energy = Math.min(100, individual.energy + 20); // Gana energía
+                this.soundService.play('eat');
 
                 // Olvidar el objetivo y volver a evaluar estado en el próximo ciclo
                 individual.targetId = undefined;
                 individual.currentState = 'idle';
+            }
+        }
+    }
+
+    private handleHunting(individual: Individual) {
+        if (individual.currentState !== 'hunting' || !individual.targetId) return;
+
+        const prey = this.world.individuals.find(i => i.id === individual.targetId && i.isAlive);
+
+        if (!prey) {
+            individual.targetId = undefined;
+            individual.currentState = 'wandering';
+            return;
+        }
+
+        const distance = Math.hypot(individual.x - prey.x, individual.y - prey.y);
+        if (distance < individual.size + prey.size) {
+            // Combate
+            const hunterPower = individual.strength + individual.energy + (individual.dna.aggression * 50);
+            const preyPower = prey.strength + prey.energy + (prey.dna.aggression * 50);
+
+            if (hunterPower > preyPower) {
+                // Victoria - el cazador consume a la presa
+                prey.isAlive = false;
+                individual.hunger = Math.max(0, individual.hunger - 70);
+                individual.energy = Math.min(100, individual.energy + prey.energy * 0.6);
+                this.soundService.play('kill');
+                individual.targetId = undefined;
+                individual.currentState = 'idle';
+
+                // Actualizar stats de civilización
+                const hunterCiv = this.world.civilizations.find(c => c.id === individual.civilizationId);
+                if (hunterCiv && hunterCiv.totalKills !== undefined) {
+                    hunterCiv.totalKills++;
+                }
+            } else {
+                // La presa es más fuerte de lo esperado - huir
+                individual.currentState = 'wandering';
+                individual.targetId = undefined;
+                individual.energy -= 5; // Perdió energía en el intento
             }
         }
     }
@@ -293,6 +367,7 @@ export class SimulationService {
 
         // Añadir al mundo
         this.world.individuals.push(newIndividual);
+        this.soundService.play('reproduction');
 
         // Poner a los padres en "cooldown" para que no se reproduzcan instantáneamente de nuevo
         const cooldownTicks = 50;

@@ -29,6 +29,20 @@ export class ProcessWorld {
     // Prioridad 1: Si tienes hambre, busca comida.
     if (individual.hunger > hungerThreshold) {
       individual.currentState = 'seekingFood';
+      // Si no tiene objetivo de comida, busca el más cercano
+      if (!individual.targetId) {
+        const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
+        if (closestFood) {
+          individual.targetId = closestFood.id;
+        } else {
+          // No hay comida, buscar presa débil
+          const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
+          if (prey) {
+            individual.currentState = 'hunting';
+            individual.targetId = prey.id;
+          }
+        }
+      }
     } else if (individual.age > 3 && individual.energy > energyThreshold && individual.cooldownUntil < world.tick) {
       // Prioridad 2: Si tienes energía y edad, busca reproducirte.
       individual.currentState = 'seekingMate';
@@ -70,5 +84,21 @@ export class ProcessWorld {
       }
     }
     return closestFood;
+  }
+
+  private findWeakestPrey(hunter: Individual, world: World, visionRange: number): Individual | null {
+    const preys = world.individuals.filter(ind => 
+      ind.isAlive &&
+      ind.id !== hunter.id &&
+      ind.civilizationId !== hunter.civilizationId && // Solo atacar otras civilizaciones
+      ind.energy < hunter.energy * 0.8 && // Solo atacar más débiles
+      Math.hypot(hunter.x - ind.x, hunter.y - ind.y) < visionRange
+    );
+
+    if (preys.length === 0) return null;
+
+    // Ordenar por energía (más débil primero) y devolver el más cercano de los débiles
+    preys.sort((a, b) => a.energy - b.energy);
+    return preys[0];
   }
 }
