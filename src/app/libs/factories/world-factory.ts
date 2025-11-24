@@ -12,9 +12,9 @@ export class WorldFactory {
     private foodFactory = new FoodFactory();
 
     create(
-        initialCivilizations: number = 3,
-        initialIndividualsPerCivilization: number = 20,
-        initialFoodSources: number = 1200
+        initialCivilizations: number = 6,
+        initialIndividualsPerCivilization: number = 50,
+        initialFoodSources: number = 10
     ): World {
         const width = 2000;
         const height = 2000;

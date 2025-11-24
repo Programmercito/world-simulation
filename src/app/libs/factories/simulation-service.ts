@@ -23,8 +23,8 @@ export class SimulationService {
 
     constructor(canvasContext: CanvasRenderingContext2D) {
         this.ctx = canvasContext;
-        // Inicializamos el mundo al crear el servicio
-        this.world = this.worldFactory.create(3, 20, 400);
+        // Inicializamos el mundo al crear el servicio (usa valores por defecto del factory)
+        this.world = this.worldFactory.create();
     }
 
     public start() {
