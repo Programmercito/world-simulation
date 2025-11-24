@@ -75,4 +75,10 @@ export class Canvas implements AfterViewInit {
   onResize() {
     this.updateCanvasInfo();
   }
+
+  addFood() {
+    if (this.simulationService) {
+      this.simulationService.addFood();
+    }
+  }
 }

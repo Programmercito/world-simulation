@@ -36,6 +36,7 @@
 			<div class="stat"><strong>Comida:</strong> <span id="food">0</span></div>
 			<div class="stat"><strong>Buscando pareja:</strong> <span id="seeking">0</span></div>
 			<div class="stat"><strong>Tick:</strong> <span id="tick">0</span></div>
+			<button class="add-food-btn" (click)="addFood()">+ Agregar Comida</button>
 		</div>
 	</div>
 	<canvas #worldCanvas id="world" [width]="worldWidth" [height]="worldHeight" *ngIf="simulationStarted"></canvas>

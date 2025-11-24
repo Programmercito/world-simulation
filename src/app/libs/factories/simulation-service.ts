@@ -12,6 +12,11 @@ export class SimulationService {
         const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
         return { population: this.world.individuals.length, food: this.world.foodSources.length, seekingMate: seeking, tick: this.world.tick };
     }
+
+    public addFood() {
+        this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
+    }
+
     private world: World;
     private ctx: CanvasRenderingContext2D;
     private worldFactory = new WorldFactory();

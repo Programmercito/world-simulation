@@ -27,6 +27,18 @@
       font-family: Arial, sans-serif;
     }
     .stats .stat { margin-bottom: 6px; }
+    .add-food-btn {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .add-food-btn:hover { background: #0b7dda; }
     .canvas-size { color: #fff; font-size: 14px; margin-right: 12px; }
     
     .config-panel {
