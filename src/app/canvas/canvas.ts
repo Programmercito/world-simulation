@@ -1,7 +1,9 @@
-import { Component, AfterViewInit, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild, HostListener, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SimulationService } from '../libs/factories/simulation-service';
+import { WebSocketService } from '../libs/services/websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-canvas',
@@ -9,11 +11,13 @@ import { SimulationService } from '../libs/factories/simulation-service';
   templateUrl: './canvas.html',
   styleUrl: './canvas.scss'
 })
-export class Canvas implements AfterViewInit {
+export class Canvas implements AfterViewInit, OnDestroy {
   @ViewChild('worldCanvas') canvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('statsDiv') statsDiv!: ElementRef<HTMLDivElement>;
   @ViewChild('canvasSize') canvasSize!: ElementRef<HTMLSpanElement>;
   private simulationService!: SimulationService;
+  private wsService = inject(WebSocketService);
+  private foodEventSubscription?: Subscription;
 
   // Propiedades de configuración (optimizadas para mayor duración)
   simulationStarted = false;
@@ -23,8 +27,8 @@ export class Canvas implements AfterViewInit {
   initialCivilizations = 5; // Menos civilizaciones
   initialIndividuals = 8; // Menos individuos por civilización
   foodSpawnInterval = 8; // Aparece comida cada 8 segundos (menos frecuente)
-  civilizations: Array<{name: string, color: string, population: number, kills: number}> = [];
-  winner: {name: string, color: string, population: number, kills: number} | null = null;
+  civilizations: Array<{ name: string, color: string, population: number, kills: number }> = [];
+  winner: { name: string, color: string, population: number, kills: number } | null = null;
 
   ngAfterViewInit() {
     // No iniciamos automáticamente, esperamos a que el usuario configure y presione el botón
@@ -32,6 +36,18 @@ export class Canvas implements AfterViewInit {
 
   startSimulation() {
     this.simulationStarted = true;
+
+    // Connect to WebSocket server
+    this.wsService.connect();
+
+    // Subscribe to food events
+    this.foodEventSubscription = this.wsService.onFoodEvent().subscribe(event => {
+      console.log('🍔 Received food event:', event);
+      if (this.simulationService) {
+        this.simulationService.addFoodBatch(event.quantity);
+      }
+    });
+
     // Esperamos un tick para que el canvas se renderice
     setTimeout(() => {
       const canvasElement = this.canvas.nativeElement;
@@ -110,5 +126,13 @@ export class Canvas implements AfterViewInit {
     if (this.simulationService) {
       this.simulationService.stop();
     }
+    // Disconnect WebSocket
+    this.wsService.disconnect();
+    this.foodEventSubscription?.unsubscribe();
+  }
+
+  ngOnDestroy() {
+    this.wsService.disconnect();
+    this.foodEventSubscription?.unsubscribe();
   }
 }

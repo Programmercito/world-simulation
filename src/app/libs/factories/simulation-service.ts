@@ -18,6 +18,13 @@ export class SimulationService {
         this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
     }
 
+    public addFoodBatch(quantity: number) {
+        for (let i = 0; i < quantity; i++) {
+            this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
+        }
+        console.log(`Added ${quantity} food items to the world`);
+    }
+
     public playVictorySound() {
         this.soundService.play('victory');
     }
@@ -89,15 +96,15 @@ export class SimulationService {
         this.world.individuals.forEach(individual => {
             if (!individual.isAlive) return;
 
-        // Actualizar atributos básicos (optimizado para mayor duración)
-        individual.age += 0.003; // Envejecen más lento
-        // Consumo de energía depende del estado (reducido)
-        const energyCost = individual.currentState === 'hunting' || individual.currentState === 'fleeing' ? 0.03 : 
-                          individual.currentState === 'exploring' ? 0.02 : 0.015;
-        individual.energy -= energyCost;
-        // Hambre aumenta más despacio
-        const hungerIncrease = individual.currentState === 'hunting' || individual.currentState === 'fleeing' ? 0.04 : 0.025;
-        individual.hunger += hungerIncrease;            // Lógica de estado (IA simple)
+            // Actualizar atributos básicos (optimizado para mayor duración)
+            individual.age += 0.003; // Envejecen más lento
+            // Consumo de energía depende del estado (reducido)
+            const energyCost = individual.currentState === 'hunting' || individual.currentState === 'fleeing' ? 0.03 :
+                individual.currentState === 'exploring' ? 0.02 : 0.015;
+            individual.energy -= energyCost;
+            // Hambre aumenta más despacio
+            const hungerIncrease = individual.currentState === 'hunting' || individual.currentState === 'fleeing' ? 0.04 : 0.025;
+            individual.hunger += hungerIncrease;            // Lógica de estado (IA simple)
             this.processWorld.processIndividual(individual, this.world);
 
             // Mover al individuo
@@ -125,10 +132,10 @@ export class SimulationService {
         // SISTEMA DE ESCASEZ PROGRESIVA
         // Calcular tiempo transcurrido en minutos
         const elapsedMinutes = (Date.now() - this.simulationStartTime) / 60000;
-        
+
         // Ajustar tasa de aparición de comida según tiempo transcurrido
         let adjustedFoodSpawnRate = this.world.foodSpawnRate;
-        
+
         if (elapsedMinutes >= 15 && elapsedMinutes < 30) {
             // 15-30 min: reducir a la mitad (equivalente a duplicar intervalo)
             adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.5;
@@ -225,7 +232,7 @@ export class SimulationService {
                 other.civilizationId !== individual.civilizationId &&
                 Math.hypot(individual.x - other.x, individual.y - other.y) < individual.visionRange
             );
-            
+
             if (threats.length > 0) {
                 // Calcular dirección promedio de las amenazas
                 let avgThreatX = 0, avgThreatY = 0;
@@ -235,12 +242,12 @@ export class SimulationService {
                 });
                 avgThreatX /= threats.length;
                 avgThreatY /= threats.length;
-                
+
                 // Huir en dirección opuesta
                 const dx = individual.x - avgThreatX;
                 const dy = individual.y - avgThreatY;
                 const distance = Math.hypot(dx, dy);
-                
+
                 if (distance > 0) {
                     moveX = (dx / distance) * individual.speed * 1.8; // Huir rápido
                     moveY = (dy / distance) * individual.speed * 1.8;
@@ -257,7 +264,7 @@ export class SimulationService {
                 const dx = target.x - individual.x;
                 const dy = target.y - individual.y;
                 const distance = Math.hypot(dx, dy);
-                
+
                 // Mantener cierta distancia (no pegarse demasiado)
                 if (distance > individual.size * 3) {
                     moveX = (dx / distance) * individual.speed * 0.8;
@@ -392,7 +399,7 @@ export class SimulationService {
                 individual.targetId = undefined;
                 individual.currentState = 'idle';
                 // Aumentar miedo en individuos cercanos de la civilización de la presa
-                this.world.individuals.filter(other => 
+                this.world.individuals.filter(other =>
                     other.isAlive &&
                     other.civilizationId === prey.civilizationId &&
                     Math.hypot(other.x - prey.x, other.y - prey.y) < 200
@@ -420,15 +427,15 @@ export class SimulationService {
      */
     private handleReproduction() {
         const readyToMate = this.world.individuals.filter(
-            ind => ind.isAlive && 
-                   ind.currentState === 'seekingMate' && 
-                   ind.energy > 50 && // Menos exigente
-                   ind.hunger < 50 // Menos exigente
+            ind => ind.isAlive &&
+                ind.currentState === 'seekingMate' &&
+                ind.energy > 50 && // Menos exigente
+                ind.hunger < 50 // Menos exigente
         );
 
         for (let i = 0; i < readyToMate.length; i++) {
             const ind1 = readyToMate[i];
-            
+
             // Si tiene un targetId específico (pareja seleccionada), solo reproducirse con ese
             if (ind1.targetId) {
                 const ind2 = readyToMate.find(other => other.id === ind1.targetId);
@@ -440,7 +447,7 @@ export class SimulationService {
                     }
                 }
             }
-            
+
             // Buscar pareja cercana compatible
             for (let j = i + 1; j < readyToMate.length; j++) {
                 const ind2 = readyToMate[j];
@@ -502,23 +509,23 @@ export class SimulationService {
         const size = individual.size;
 
         this.ctx.beginPath();
-        
+
         switch (individual.shape) {
             case 'circle':
                 this.ctx.arc(x, y, size, 0, 2 * Math.PI);
                 break;
-            
+
             case 'square':
                 this.ctx.rect(x - size, y - size, size * 2, size * 2);
                 break;
-            
+
             case 'triangle':
                 this.ctx.moveTo(x, y - size);
                 this.ctx.lineTo(x + size, y + size);
                 this.ctx.lineTo(x - size, y + size);
                 this.ctx.closePath();
                 break;
-            
+
             case 'diamond':
                 this.ctx.moveTo(x, y - size);
                 this.ctx.lineTo(x + size, y);
@@ -527,7 +534,7 @@ export class SimulationService {
                 this.ctx.closePath();
                 break;
         }
-        
+
         this.ctx.fill();
     }
 }
