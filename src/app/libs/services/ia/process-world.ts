@@ -15,7 +15,7 @@ export class ProcessWorld {
     // Inicializar propiedades si no existen
     if (!individual.lastFoodLocations) individual.lastFoodLocations = [];
     if (individual.fearLevel === undefined) individual.fearLevel = 0;
-    
+
     // Reducir miedo gradualmente con el tiempo
     individual.fearLevel = (individual.fearLevel || 0) - 0.01;
     individual.fearLevel = Math.max(0, individual.fearLevel);
@@ -31,9 +31,10 @@ export class ProcessWorld {
     const effectiveVisionRange = individual.visionRange * visionMultiplier;
 
     // Usar resiliencia para decidir umbrales de hambre y energía
-    const hungerThreshold = 25 - (individual.dna.resilience - 0.5) * 10; // Umbral más alto
-    const energyThreshold = 45 - (individual.dna.resilience - 0.5) * 10; // Menos exigente
-    
+    // AJUSTADO: Umbrales más altos para que no busquen comida constantemente
+    const hungerThreshold = 60 - (individual.dna.resilience - 0.5) * 15; // Más tolerantes al hambre
+    const energyThreshold = 40 - (individual.dna.resilience - 0.5) * 10;
+
     // Detectar amenazas cercanas y aumentar miedo
     this.detectThreats(individual, world, effectiveVisionRange);
 
@@ -44,11 +45,28 @@ export class ProcessWorld {
       return; // Salir temprano, el miedo domina todo
     }
 
-    // PRIORIDAD 1: Si tienes hambre CRÍTICA, es urgente buscar comida o cazar
+    // PRIORIDAD 1: Reproducción cuando están bien alimentados y tienen edad
+    // NUEVO: Reproducción tiene prioridad sobre comida cuando no hay hambre crítica
+    if (individual.age > 3 &&
+      individual.energy > energyThreshold &&
+      individual.hunger < 50 && // Solo si no tienen mucha hambre
+      individual.cooldownUntil < world.tick) {
+      // Buscar pareja cercana compatible
+      const potentialMate = this.findCompatibleMate(individual, world, effectiveVisionRange);
+      if (potentialMate) {
+        individual.currentState = 'seekingMate';
+        individual.targetId = potentialMate.id;
+        individual.socialBond = potentialMate.id; // Crear vínculo temporal
+        individual.explorationTarget = undefined;
+        return; // Salir temprano, la reproducción es prioritaria
+      }
+    }
+
+    // PRIORIDAD 2: Buscar comida solo si realmente tienen hambre
     if (individual.hunger > hungerThreshold) {
       // Buscar comida visible primero
       const closestFood = this.findClosestFood(individual, world, effectiveVisionRange);
-      
+
       if (closestFood) {
         // Comida visible - ir por ella
         individual.currentState = 'seekingFood';
@@ -79,20 +97,8 @@ export class ProcessWorld {
         // Hambre normal, explorar inteligentemente
         this.exploreWithMemory(individual, world);
       }
-    } else if (individual.age > 3 && individual.energy > energyThreshold && individual.cooldownUntil < world.tick) {
-      // PRIORIDAD 2: Si tienes buena salud y edad, considera reproducirte
-      // Buscar pareja cercana compatible
-      const potentialMate = this.findCompatibleMate(individual, world, effectiveVisionRange);
-      if (potentialMate) {
-        individual.currentState = 'seekingMate';
-        individual.targetId = potentialMate.id;
-        individual.socialBond = potentialMate.id; // Crear vínculo temporal
-      } else {
-        individual.currentState = 'wandering';
-      }
-      individual.explorationTarget = undefined;
     } else {
-      // PRIORIDAD 3: Deambular o seguir al grupo
+      // PRIORIDAD 3: Deambular o seguir al grupo (cuando están satisfechos)
       if (individual.socialBond) {
         const bondedIndividual = world.individuals.find(i => i.id === individual.socialBond && i.isAlive);
         if (bondedIndividual) {
@@ -118,14 +124,14 @@ export class ProcessWorld {
 
   private detectThreats(individual: Individual, world: World, visionRange: number): void {
     // Buscar individuos agresivos cercanos de otras civilizaciones
-    const threats = world.individuals.filter(other => 
+    const threats = world.individuals.filter(other =>
       other.isAlive &&
       other.id !== individual.id &&
       other.civilizationId !== individual.civilizationId &&
       other.dna.aggression > 0.7 &&
       Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange * 0.8
     );
-    
+
     if (threats.length > 0) {
       individual.fearLevel = Math.min(1, (individual.fearLevel || 0) + 0.2);
     }
@@ -133,10 +139,10 @@ export class ProcessWorld {
 
   private rememberFoodLocation(individual: Individual, x: number, y: number, tick: number): void {
     if (!individual.lastFoodLocations) individual.lastFoodLocations = [];
-    
+
     // Agregar nueva ubicación
     individual.lastFoodLocations.push({ x, y, timestamp: tick });
-    
+
     // Mantener solo las últimas 5 ubicaciones
     if (individual.lastFoodLocations.length > 5) {
       individual.lastFoodLocations.shift();
@@ -145,7 +151,7 @@ export class ProcessWorld {
 
   private exploreWithMemory(individual: Individual, world: World): void {
     individual.currentState = 'exploring';
-    
+
     // Si tiene memoria de comida, ir a esas ubicaciones primero
     if (individual.lastFoodLocations && individual.lastFoodLocations.length > 0) {
       // Ir a la ubicación más reciente si no tiene objetivo
@@ -169,23 +175,23 @@ export class ProcessWorld {
       other.id !== individual.id &&
       other.civilizationId === individual.civilizationId &&
       other.age > 3 &&
-      other.energy > 50 &&
-      other.currentState === 'seekingMate' &&
+      other.energy > 40 && // REDUCIDO: Menos exigente con energía
+      other.hunger < 60 && // NUEVO: Solo si no tienen mucha hambre
       other.cooldownUntil < world.tick &&
       Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange
     );
 
     if (potentialMates.length === 0) return null;
-    
+
     // Preferir parejas con DNA similar (más realista)
     potentialMates.sort((a, b) => {
       const similarityA = Math.abs(individual.dna.resilience - a.dna.resilience) +
-                         Math.abs(individual.dna.curiosity - a.dna.curiosity);
+        Math.abs(individual.dna.curiosity - a.dna.curiosity);
       const similarityB = Math.abs(individual.dna.resilience - b.dna.resilience) +
-                         Math.abs(individual.dna.curiosity - b.dna.curiosity);
+        Math.abs(individual.dna.curiosity - b.dna.curiosity);
       return similarityA - similarityB;
     });
-    
+
     return potentialMates[0];
   }
 
@@ -206,7 +212,7 @@ export class ProcessWorld {
   }
 
   private findWeakestPrey(hunter: Individual, world: World, visionRange: number): Individual | null {
-    const preys = world.individuals.filter(ind => 
+    const preys = world.individuals.filter(ind =>
       ind.isAlive &&
       ind.id !== hunter.id &&
       ind.civilizationId !== hunter.civilizationId && // Solo atacar otras civilizaciones
