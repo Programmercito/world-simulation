@@ -179,7 +179,20 @@ export class SimulationService {
             this.drawShape(individual);
         });
 
-        // No draw stats in canvas anymore; stats are displayed in the HTML UI
+        // Dibujar texto estático y número de habitantes en el canvas
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = 'bold 20px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'top';
+        this.ctx.fillText('Send gifts to feed them', 10, 10);
+
+        const population = this.world.individuals.length;
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.fillText(`Population: ${population}`, 10, 40);
+
+        const food = this.world.foodSources.length;
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.fillText(`Food: ${food}`, 10, 70);
     }
 
     /**

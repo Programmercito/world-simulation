@@ -21,8 +21,8 @@ export class Canvas implements AfterViewInit, OnDestroy {
 
   // Propiedades de configuración (optimizadas para mayor duración)
   simulationStarted = false;
-  worldWidth = 2000;
-  worldHeight = 2000;
+  worldWidth = 1080;
+  worldHeight = 1920;
   initialFood = 30; // Más comida inicial
   initialCivilizations = 5; // Menos civilizaciones
   initialIndividuals = 8; // Menos individuos por civilización
