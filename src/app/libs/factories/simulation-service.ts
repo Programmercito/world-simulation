@@ -17,6 +17,7 @@ export class SimulationService {
     public addFood() {
         this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         this.soundService.play('foodSpawn');
+        this.addEvent('🍔 Comida agregada');
     }
 
     public addFoodBatch(quantity: number) {
@@ -24,11 +25,8 @@ export class SimulationService {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         }
         this.soundService.play('foodSpawn');
+        this.addEvent(`🍔 +${quantity} comida agregada`);
         console.log(`Added ${quantity} food items to the world`);
-    }
-
-    public playVictorySound() {
-        this.soundService.play('victory');
     }
 
     public getCivilizations() {
@@ -49,11 +47,20 @@ export class SimulationService {
     private lastTimestamp = 0;
     private isRunning = false;
     private simulationStartTime = 0; // Timestamp de inicio para escasez progresiva
+    private eventLog: string[] = []; // Log de eventos recientes (max 5)
+    private winnerCivilization: string | null = null; // Nombre de la civilización ganadora
+    private foodSpawnTickCounter = 0; // Contador de ticks para spawn de comida
+    private ticksPerFoodSpawn = 0; // Ticks necesarios para spawn de comida
 
     constructor(canvasContext: CanvasRenderingContext2D, civilizations?: number, individuals?: number, food?: number, width?: number, height?: number, foodSpawnIntervalSeconds?: number) {
         this.ctx = canvasContext;
         // Inicializamos el mundo al crear el servicio (usa valores por defecto del factory o los proporcionados)
         this.world = this.worldFactory.create(civilizations, individuals, food, width, height, foodSpawnIntervalSeconds);
+
+        // Calcular ticks necesarios para spawn de comida (intervalo fijo)
+        if (foodSpawnIntervalSeconds && foodSpawnIntervalSeconds > 0) {
+            this.ticksPerFoodSpawn = Math.floor((foodSpawnIntervalSeconds * 1000) / this.world.cycleDurationMs);
+        }
     }
 
     public start() {
@@ -66,6 +73,13 @@ export class SimulationService {
 
     public stop() {
         this.isRunning = false;
+    }
+
+    private addEvent(message: string) {
+        this.eventLog.unshift(message); // Agregar al inicio
+        if (this.eventLog.length > 5) {
+            this.eventLog.pop(); // Mantener solo los últimos 5
+        }
     }
 
     private gameLoop(timestamp: number) {
@@ -135,29 +149,52 @@ export class SimulationService {
         // Calcular tiempo transcurrido en minutos
         const elapsedMinutes = (Date.now() - this.simulationStartTime) / 60000;
 
-        // Ajustar tasa de aparición de comida según tiempo transcurrido
-        let adjustedFoodSpawnRate = this.world.foodSpawnRate;
+        // Ajustar intervalo de spawn según tiempo transcurrido (multiplicador de ticks)
+        let spawnIntervalMultiplier = 1;
 
         if (elapsedMinutes >= 15 && elapsedMinutes < 30) {
-            // 15-30 min: reducir a la mitad (equivalente a duplicar intervalo)
-            adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.5;
+            // 15-30 min: duplicar intervalo
+            spawnIntervalMultiplier = 2;
         } else if (elapsedMinutes >= 30 && elapsedMinutes < 60) {
-            // 30-60 min: reducir a 1/3 (equivalente a triplicar intervalo)
-            adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.33;
+            // 30-60 min: triplicar intervalo
+            spawnIntervalMultiplier = 3;
         } else if (elapsedMinutes >= 60) {
-            // 60+ min: reducir a 1/4 (equivalente a cuadruplicar intervalo)
-            adjustedFoodSpawnRate = this.world.foodSpawnRate * 0.25;
+            // 60+ min: cuadruplicar intervalo
+            spawnIntervalMultiplier = 4;
         }
 
-        // Generar nueva comida (solo si no hay demasiada) con tasa ajustada
-        if (this.world.foodSources.length < 2000 && Math.random() < adjustedFoodSpawnRate) {
-            this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
-            this.soundService.play('foodSpawn');
+        // Generar nueva comida cada X ticks (intervalo fijo)
+        if (this.ticksPerFoodSpawn > 0 && this.world.foodSources.length < 2000) {
+            this.foodSpawnTickCounter++;
+            const adjustedTicksPerSpawn = this.ticksPerFoodSpawn * spawnIntervalMultiplier;
+
+            if (this.foodSpawnTickCounter >= adjustedTicksPerSpawn) {
+                this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
+                this.soundService.play('foodSpawn');
+                this.addEvent('🌱 Comida apareció naturalmente');
+                this.foodSpawnTickCounter = 0; // Resetear contador
+                console.log(`Food spawned! Interval: ${(adjustedTicksPerSpawn * this.world.cycleDurationMs / 1000).toFixed(2)}s (multiplier: ${spawnIntervalMultiplier}x)`);
+            }
         }
 
         // Enviar estadísticas al callback si está registrado
         const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
         this.onStats?.({ population: this.world.individuals.length, food: this.world.foodSources.length, seekingMate: seeking, tick: this.world.tick });
+
+        // Detectar victoria (solo una civilización con población)
+        if (!this.winnerCivilization) {
+            const civilizationsAlive = this.world.civilizations.filter(civ => {
+                const population = this.world.individuals.filter(ind => ind.isAlive && ind.civilizationId === civ.id).length;
+                return population > 0;
+            });
+
+            if (civilizationsAlive.length === 1) {
+                this.winnerCivilization = civilizationsAlive[0].name;
+                this.soundService.play('victory');
+                this.addEvent(`🏆 ${this.winnerCivilization} ha ganado!`);
+                this.stop();
+            }
+        }
     }
 
     /**
@@ -185,19 +222,51 @@ export class SimulationService {
         const centerY = this.ctx.canvas.height / 2;
 
         this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 24px Arial';
+        this.ctx.font = 'bold 32px Arial'; // Aumentado de 24px a 32px para móvil
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'middle';
 
         // Título
-        this.ctx.fillText('Simulation IA world v1.1', 10, centerY - 60);
+        this.ctx.fillText('Simulation IA world v1.1', 10, centerY - 100);
 
         // Estadísticas
         const population = this.world.individuals.length;
-        this.ctx.fillText(`Population: ${population}`, 10, centerY - 20);
+        this.ctx.fillText(`Population: ${population}`, 10, centerY - 50);
 
         const food = this.world.foodSources.length;
-        this.ctx.fillText(`Food: ${food}`, 10, centerY + 20);
+        this.ctx.fillText(`Food: ${food}`, 10, centerY);
+
+        // Log de eventos (debajo de las estadísticas)
+        this.ctx.font = '18px Arial'; // Fuente más pequeña para eventos
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        let eventY = centerY + 50;
+        this.eventLog.forEach((event, index) => {
+            this.ctx.fillText(event, 10, eventY + (index * 25));
+        });
+
+        // Mensaje de victoria (si hay ganador)
+        if (this.winnerCivilization) {
+            // Fondo semi-transparente
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
+            // Texto de victoria
+            this.ctx.fillStyle = '#FFD700'; // Dorado
+            this.ctx.font = 'bold 48px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+
+            const victoryY = this.ctx.canvas.height / 2;
+            this.ctx.fillText('🏆 VICTORIA 🏆', this.ctx.canvas.width / 2, victoryY - 40);
+
+            this.ctx.font = 'bold 36px Arial';
+            this.ctx.fillStyle = 'white';
+            this.ctx.fillText(this.winnerCivilization, this.ctx.canvas.width / 2, victoryY + 20);
+
+            this.ctx.font = '24px Arial';
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            this.ctx.fillText('ha conquistado el mundo', this.ctx.canvas.width / 2, victoryY + 60);
+        }
     }
 
     /**
@@ -428,9 +497,12 @@ export class SimulationService {
 
                 // Actualizar stats de civilización
                 const hunterCiv = this.world.civilizations.find(c => c.id === individual.civilizationId);
+                const preyCiv = this.world.civilizations.find(c => c.id === prey.civilizationId);
                 if (hunterCiv && hunterCiv.totalKills !== undefined) {
                     hunterCiv.totalKills++;
                 }
+                // Agregar evento
+                this.addEvent(`💀 ${hunterCiv?.name || 'Alguien'} eliminó a ${preyCiv?.name || 'alguien'}`);
             } else {
                 // La presa es más fuerte de lo esperado - huir
                 individual.currentState = 'wandering';
@@ -508,6 +580,13 @@ export class SimulationService {
         // Añadir al mundo
         this.world.individuals.push(newIndividual);
         this.soundService.play('reproduction');
+
+        // Agregar evento
+        const civ = this.world.civilizations.find(c => c.id === newIndividual.civilizationId);
+        const creatureType = newIndividual.race === 'circle' ? 'Bestia' :
+            newIndividual.race === 'square' ? 'Titán' :
+                newIndividual.race === 'triangle' ? 'Depredador' : 'Criatura';
+        this.addEvent(`👶 Nació ${creatureType} de ${civ?.name || 'desconocido'}`);
 
         // Poner a los padres en "cooldown" para que no se reproduzcan instantáneamente de nuevo
         const cooldownTicks = 80; // Cooldown más largo

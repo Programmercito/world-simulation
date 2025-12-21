@@ -28,7 +28,6 @@ export class Canvas implements AfterViewInit, OnDestroy {
   initialIndividuals = 8; // Menos individuos por civilización
   foodSpawnInterval = 8; // Aparece comida cada 8 segundos (menos frecuente)
   civilizations: Array<{ name: string, color: string, population: number, kills: number }> = [];
-  winner: { name: string, color: string, population: number, kills: number } | null = null;
 
   ngAfterViewInit() {
     // No iniciamos automáticamente, esperamos a que el usuario configure y presione el botón
@@ -81,7 +80,6 @@ export class Canvas implements AfterViewInit, OnDestroy {
     // Actualizar población de civilizaciones
     if (this.simulationService) {
       this.civilizations = this.simulationService.getCivilizations();
-      this.checkWinner();
     }
   }
 
@@ -108,19 +106,9 @@ export class Canvas implements AfterViewInit, OnDestroy {
     }
   }
 
-  private checkWinner() {
-    const civilizationsAlive = this.civilizations.filter(civ => civ.population > 0);
-    if (civilizationsAlive.length === 1 && !this.winner) {
-      this.winner = civilizationsAlive[0];
-      if (this.simulationService) {
-        this.simulationService.playVictorySound();
-        this.simulationService.stop();
-      }
-    }
-  }
+
 
   restart() {
-    this.winner = null;
     this.simulationStarted = false;
     this.civilizations = [];
     if (this.simulationService) {
