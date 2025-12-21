@@ -16,12 +16,14 @@ export class SimulationService {
 
     public addFood() {
         this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
+        this.soundService.play('foodSpawn');
     }
 
     public addFoodBatch(quantity: number) {
         for (let i = 0; i < quantity; i++) {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         }
+        this.soundService.play('foodSpawn');
         console.log(`Added ${quantity} food items to the world`);
     }
 
