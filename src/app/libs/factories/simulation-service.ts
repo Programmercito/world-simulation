@@ -187,6 +187,10 @@ export class SimulationService {
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'middle';
 
+        // Título
+        this.ctx.fillText('Simulation IA world v1.1', 10, centerY - 60);
+
+        // Estadísticas
         const population = this.world.individuals.length;
         this.ctx.fillText(`Population: ${population}`, 10, centerY - 20);
 
