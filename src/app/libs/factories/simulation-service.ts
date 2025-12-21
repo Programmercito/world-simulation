@@ -179,20 +179,19 @@ export class SimulationService {
             this.drawShape(individual);
         });
 
-        // Dibujar texto estático y número de habitantes en el canvas
+        // Dibujar estadísticas centradas verticalmente en el canvas
+        const centerY = this.ctx.canvas.height / 2;
+
         this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 20px Arial';
+        this.ctx.font = 'bold 24px Arial';
         this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'top';
-        this.ctx.fillText('Send gifts to feed them', 10, 10);
+        this.ctx.textBaseline = 'middle';
 
         const population = this.world.individuals.length;
-        this.ctx.font = 'bold 24px Arial';
-        this.ctx.fillText(`Population: ${population}`, 10, 40);
+        this.ctx.fillText(`Population: ${population}`, 10, centerY - 20);
 
         const food = this.world.foodSources.length;
-        this.ctx.font = 'bold 24px Arial';
-        this.ctx.fillText(`Food: ${food}`, 10, 70);
+        this.ctx.fillText(`Food: ${food}`, 10, centerY + 20);
     }
 
     /**
