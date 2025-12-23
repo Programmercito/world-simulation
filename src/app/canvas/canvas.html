@@ -39,6 +39,14 @@
 		<div class="info-panels">
 			<div class="stats" #statsDiv>
 				<h4>Estadísticas</h4>
+				<div class="stat food-interval-control">
+					<strong>Intervalo de comida (seg):</strong>
+					<div class="interval-controls">
+						<button class="interval-btn" (click)="decreaseFoodInterval()">-</button>
+						<span class="interval-value">{{currentFoodInterval}}</span>
+						<button class="interval-btn" (click)="increaseFoodInterval()">+</button>
+					</div>
+				</div>
 				<div class="stat"><strong>Población:</strong> <span id="population">0</span></div>
 				<div class="stat"><strong>Comida:</strong> <span id="food">0</span></div>
 				<div class="stat"><strong>Buscando pareja:</strong> <span id="seeking">0</span></div>

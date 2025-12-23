@@ -9,6 +9,7 @@ import { SoundService } from '../services/sound-service';
 
 export class SimulationService {
     public onStats?: (stats: { population: number; food: number; seekingMate: number; tick: number }) => void;
+    public onVictory?: (civilizationName: string) => void;
     public getStats() {
         const seeking = this.world.individuals.filter(i => i.currentState === 'seekingMate').length;
         return { population: this.world.individuals.length, food: this.world.foodSources.length, seekingMate: seeking, tick: this.world.tick };
@@ -73,6 +74,16 @@ export class SimulationService {
 
     public stop() {
         this.isRunning = false;
+    }
+
+    public setFoodSpawnInterval(intervalSeconds: number) {
+        if (intervalSeconds > 0) {
+            this.ticksPerFoodSpawn = Math.floor((intervalSeconds * 1000) / this.world.cycleDurationMs);
+            console.log(`Intervalo de spawn de comida actualizado: ${intervalSeconds}s (${this.ticksPerFoodSpawn} ticks)`);
+        } else {
+            this.ticksPerFoodSpawn = 0; // Desactivar spawn automático
+            console.log('Spawn automático de comida desactivado');
+        }
     }
 
     private addEvent(message: string) {
@@ -193,6 +204,7 @@ export class SimulationService {
                 this.soundService.play('victory');
                 this.addEvent(`🏆 ${this.winnerCivilization} ha ganado!`);
                 this.stop();
+                this.onVictory?.(this.winnerCivilization); // Notificar victoria
             }
         }
     }
@@ -222,12 +234,12 @@ export class SimulationService {
         const centerY = this.ctx.canvas.height / 2;
 
         this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 32px Arial'; // Aumentado de 24px a 32px para móvil
+        this.ctx.font = 'bold 33px Arial'; // Aumentado para móvil
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'middle';
 
         // Título
-        this.ctx.fillText('Simulation IA world v1.1', 10, centerY - 100);
+        this.ctx.fillText('Simulation IA world v1.5', 10, centerY - 100);
 
         // Estadísticas
         const population = this.world.individuals.length;
@@ -237,11 +249,11 @@ export class SimulationService {
         this.ctx.fillText(`Food: ${food}`, 10, centerY);
 
         // Log de eventos (debajo de las estadísticas)
-        this.ctx.font = '18px Arial'; // Fuente más pequeña para eventos
+        this.ctx.font = '20px Arial'; // Aumentado para legibilidad en móvil
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         let eventY = centerY + 50;
         this.eventLog.forEach((event, index) => {
-            this.ctx.fillText(event, 10, eventY + (index * 25));
+            this.ctx.fillText(event, 10, eventY + (index * 27));
         });
 
         // Mensaje de victoria (si hay ganador)
@@ -605,33 +617,159 @@ export class SimulationService {
         const y = individual.y;
         const size = individual.size;
 
-        this.ctx.beginPath();
+        this.ctx.save();
 
         switch (individual.shape) {
             case 'circle':
+                // Bestia redonda con cuerpo y ojos
+                this.ctx.fillStyle = individual.color;
+                this.ctx.beginPath();
                 this.ctx.arc(x, y, size, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Ojos
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.arc(x - size * 0.3, y - size * 0.2, size * 0.25, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.3, y - size * 0.2, size * 0.25, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Pupilas
+                this.ctx.fillStyle = 'black';
+                this.ctx.beginPath();
+                this.ctx.arc(x - size * 0.3, y - size * 0.2, size * 0.12, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.3, y - size * 0.2, size * 0.12, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Boca
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                this.ctx.lineWidth = 1.5;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y + size * 0.2, size * 0.4, 0.2, Math.PI - 0.2);
+                this.ctx.stroke();
                 break;
 
             case 'square':
-                this.ctx.rect(x - size, y - size, size * 2, size * 2);
+                // Titán cuadrado robusto
+                this.ctx.fillStyle = individual.color;
+                this.ctx.fillRect(x - size, y - size, size * 2, size * 2);
+
+                // Borde más oscuro para dar profundidad
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(x - size, y - size, size * 2, size * 2);
+
+                // Ojos cuadrados
+                this.ctx.fillStyle = 'white';
+                this.ctx.fillRect(x - size * 0.5, y - size * 0.5, size * 0.4, size * 0.4);
+                this.ctx.fillRect(x + size * 0.1, y - size * 0.5, size * 0.4, size * 0.4);
+
+                // Pupilas
+                this.ctx.fillStyle = 'black';
+                this.ctx.fillRect(x - size * 0.4, y - size * 0.4, size * 0.2, size * 0.2);
+                this.ctx.fillRect(x + size * 0.2, y - size * 0.4, size * 0.2, size * 0.2);
+
+                // Líneas de armadura
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x - size, y);
+                this.ctx.lineTo(x + size, y);
+                this.ctx.stroke();
                 break;
 
             case 'triangle':
+                // Depredador triangular afilado
+                this.ctx.fillStyle = individual.color;
+                this.ctx.beginPath();
                 this.ctx.moveTo(x, y - size);
                 this.ctx.lineTo(x + size, y + size);
                 this.ctx.lineTo(x - size, y + size);
                 this.ctx.closePath();
+                this.ctx.fill();
+
+                // Borde afilado
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+
+                // Ojos amenazantes
+                this.ctx.fillStyle = 'red';
+                this.ctx.beginPath();
+                this.ctx.arc(x - size * 0.25, y - size * 0.2, size * 0.2, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.25, y - size * 0.2, size * 0.2, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Pupilas
+                this.ctx.fillStyle = 'black';
+                this.ctx.beginPath();
+                this.ctx.arc(x - size * 0.25, y - size * 0.2, size * 0.1, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.25, y - size * 0.2, size * 0.1, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Colmillos
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.moveTo(x - size * 0.15, y + size * 0.3);
+                this.ctx.lineTo(x - size * 0.05, y + size * 0.6);
+                this.ctx.lineTo(x - size * 0.25, y + size * 0.6);
+                this.ctx.closePath();
+                this.ctx.moveTo(x + size * 0.15, y + size * 0.3);
+                this.ctx.lineTo(x + size * 0.05, y + size * 0.6);
+                this.ctx.lineTo(x + size * 0.25, y + size * 0.6);
+                this.ctx.closePath();
+                this.ctx.fill();
                 break;
 
             case 'diamond':
+                // Criatura de diamante mística
+                this.ctx.fillStyle = individual.color;
+                this.ctx.beginPath();
                 this.ctx.moveTo(x, y - size);
                 this.ctx.lineTo(x + size, y);
                 this.ctx.lineTo(x, y + size);
                 this.ctx.lineTo(x - size, y);
                 this.ctx.closePath();
+                this.ctx.fill();
+
+                // Brillo cristalino
+                const gradient = this.ctx.createLinearGradient(x - size, y - size, x + size, y + size);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+
+                // Borde brillante
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+
+                // Ojos místicos
+                this.ctx.fillStyle = 'cyan';
+                this.ctx.beginPath();
+                this.ctx.arc(x - size * 0.3, y - size * 0.1, size * 0.2, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.3, y - size * 0.1, size * 0.2, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Pupilas brillantes
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.arc(x - size * 0.3, y - size * 0.1, size * 0.08, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.3, y - size * 0.1, size * 0.08, 0, 2 * Math.PI);
+                this.ctx.fill();
+
+                // Patrón interno
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y - size * 0.5);
+                this.ctx.lineTo(x, y + size * 0.5);
+                this.ctx.moveTo(x - size * 0.5, y);
+                this.ctx.lineTo(x + size * 0.5, y);
+                this.ctx.stroke();
                 break;
         }
 
-        this.ctx.fill();
+        this.ctx.restore();
     }
 }

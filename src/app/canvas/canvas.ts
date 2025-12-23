@@ -27,6 +27,7 @@ export class Canvas implements AfterViewInit, OnDestroy {
   initialCivilizations = 5; // Menos civilizaciones
   initialIndividuals = 8; // Menos individuos por civilización
   foodSpawnInterval = 8; // Aparece comida cada 8 segundos (menos frecuente)
+  currentFoodInterval = 8; // Intervalo actual (se actualiza dinámicamente)
   civilizations: Array<{ name: string, color: string, population: number, kills: number }> = [];
 
   ngAfterViewInit() {
@@ -35,6 +36,7 @@ export class Canvas implements AfterViewInit, OnDestroy {
 
   startSimulation() {
     this.simulationStarted = true;
+    this.currentFoodInterval = this.foodSpawnInterval; // Inicializar el intervalo actual
 
     // Connect to WebSocket server
     this.wsService.connect();
@@ -55,6 +57,8 @@ export class Canvas implements AfterViewInit, OnDestroy {
         this.simulationService = new SimulationService(ctx, this.initialCivilizations, this.initialIndividuals, this.initialFood, this.worldWidth, this.worldHeight, this.foodSpawnInterval);
         // Register the stats callback so we render stats outside the canvas
         this.simulationService.onStats = (stats) => this.updateStats(stats);
+        // Register victory callback for auto-restart
+        this.simulationService.onVictory = (winnerName) => this.handleVictory(winnerName);
         // Set initial stats immediately
         this.updateStats(this.simulationService.getStats());
         // Cargar civilizaciones
@@ -100,10 +104,40 @@ export class Canvas implements AfterViewInit, OnDestroy {
     this.updateCanvasInfo();
   }
 
+  increaseFoodInterval() {
+    if (this.simulationService) {
+      this.currentFoodInterval = Math.min(60, this.currentFoodInterval + 1);
+      this.simulationService.setFoodSpawnInterval(this.currentFoodInterval);
+      console.log(`Intervalo de comida aumentado a ${this.currentFoodInterval}s`);
+    }
+  }
+
+  decreaseFoodInterval() {
+    if (this.simulationService) {
+      this.currentFoodInterval = Math.max(1, this.currentFoodInterval - 1);
+      this.simulationService.setFoodSpawnInterval(this.currentFoodInterval);
+      console.log(`Intervalo de comida reducido a ${this.currentFoodInterval}s`);
+    }
+  }
+
   addFood() {
     if (this.simulationService) {
       this.simulationService.addFood();
     }
+  }
+
+  private handleVictory(winnerName: string) {
+    console.log(`🏆 Victoria! ${winnerName} ha ganado. Reiniciando en 20 segundos...`);
+
+    // Esperar 20 segundos y luego reiniciar
+    setTimeout(() => {
+      console.log('Reiniciando simulación...');
+      this.restart();
+      // Iniciar nueva simulación automáticamente
+      setTimeout(() => {
+        this.startSimulation();
+      }, 100);
+    }, 20000); // 20 segundos
   }
 
 
