@@ -474,7 +474,7 @@ export class SimulationService {
             this.ctx.textBaseline = 'middle';
 
             const victoryY = this.ctx.canvas.height / 2;
-            this.ctx.fillText('🏆 VICTORIA 🏆', this.ctx.canvas.width / 2, victoryY - 40);
+            this.ctx.fillText('🏆 VICTORY 🏆', this.ctx.canvas.width / 2, victoryY - 40);
 
             this.ctx.font = 'bold 36px Arial';
             this.ctx.fillStyle = 'white';
@@ -482,7 +482,7 @@ export class SimulationService {
 
             this.ctx.font = '24px Arial';
             this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            this.ctx.fillText('ha conquistado el mundo', this.ctx.canvas.width / 2, victoryY + 60);
+            this.ctx.fillText('has conquered the world', this.ctx.canvas.width / 2, victoryY + 60);
         }
     }
 
@@ -719,7 +719,7 @@ export class SimulationService {
                     hunterCiv.totalKills++;
                 }
                 // Agregar evento
-                this.addEvent(`💀 ${hunterCiv?.name || 'Alguien'} eliminó a ${preyCiv?.name || 'alguien'}`);
+                this.addEvent(`💀 ${hunterCiv?.name || 'Someone'} killed ${preyCiv?.name || 'someone'}`);
             } else {
                 // La presa es más fuerte de lo esperado - huir
                 individual.currentState = 'wandering';
@@ -800,10 +800,10 @@ export class SimulationService {
 
         // Agregar evento
         const civ = this.world.civilizations.find(c => c.id === newIndividual.civilizationId);
-        const creatureType = newIndividual.race === 'circle' ? 'Bestia' :
-            newIndividual.race === 'square' ? 'Titán' :
-                newIndividual.race === 'triangle' ? 'Depredador' : 'Criatura';
-        this.addEvent(`👶 Nació ${creatureType} de ${civ?.name || 'desconocido'}`);
+        const creatureType = newIndividual.race === 'circle' ? 'Beast' :
+            newIndividual.race === 'square' ? 'Titan' :
+                newIndividual.race === 'triangle' ? 'Predator' : 'Creature';
+        this.addEvent(`👶 ${creatureType} born from ${civ?.name || 'unknown'}`);
 
         // Poner a los padres en "cooldown" para que no se reproduzcan instantáneamente de nuevo
         const cooldownTicks = 80; // Cooldown más largo
