@@ -270,48 +270,15 @@ export class SimulationService {
         // Dibujar estadísticas centradas verticalmente en el canvas
         const centerY = this.ctx.canvas.height / 2;
 
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 33px Arial'; // Aumentado para móvil
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'middle';
-
-        // Título
-        this.ctx.fillText('Simulation IA world v1.5', 10, centerY - 100);
-
-        // Estadísticas
+        // Calcular métricas de urgencia primero
         const population = this.world.individuals.length;
-        this.ctx.fillText(`Population: ${population}`, 10, centerY - 50);
-
         const food = this.world.foodSources.length;
-        this.ctx.fillText(`Food: ${food}`, 10, centerY);
-
-        // ========== INDICADORES DE URGENCIA ==========
-
-        // Calcular métricas de urgencia
         const starvingIndividuals = this.world.individuals.filter(i => i.hunger > 70).length;
         const averageHunger = this.world.individuals.reduce((sum, i) => sum + i.hunger, 0) / Math.max(1, population);
         const foodPerCreature = food / Math.max(1, population);
 
-        // CONTADOR DE CRIATURAS MURIENDO
-        const urgencyY = 80; // Posición superior
-        if (starvingIndividuals > 0) {
-            this.ctx.font = 'bold 42px Arial';
-            this.ctx.fillStyle = '#FF3333'; // Rojo brillante
-            this.ctx.strokeStyle = 'black';
-            this.ctx.lineWidth = 3;
-            const starvingText = `💀 ${starvingIndividuals} MURIENDO DE HAMBRE`;
-            this.ctx.strokeText(starvingText, 10, urgencyY);
-            this.ctx.fillText(starvingText, 10, urgencyY);
-
-            // Efecto pulsante
-            if (Math.floor(this.world.tick / 10) % 2 === 0) {
-                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-                this.ctx.fillRect(0, urgencyY - 30, this.ctx.canvas.width, 60);
-            }
-        }
-
-        // BARRA DE HAMBRE GLOBAL
-        const barY = urgencyY + 60;
+        // ========== BARRA DE HAMBRE GLOBAL (ARRIBA DE TODO) ==========
+        const barY = 20; // Arriba del canvas
         const barWidth = this.ctx.canvas.width * 0.6;
         const barHeight = 40;
         const barX = 10;
@@ -321,7 +288,6 @@ export class SimulationService {
         this.ctx.fillRect(barX, barY, barWidth, barHeight);
 
         // Barra de hambre (rojo = más hambre)
-        // Limitar entre 0 y 1 para evitar desbordamiento
         const hungerPercent = Math.min(1, Math.max(0, averageHunger / 100));
         const hungerColor = hungerPercent > 0.7 ? '#FF3333' :
             hungerPercent > 0.4 ? '#FFA500' : '#00FF00';
@@ -339,15 +305,50 @@ export class SimulationService {
         this.ctx.textAlign = 'center';
         this.ctx.strokeStyle = 'black';
         this.ctx.lineWidth = 2;
-        // Limitar el valor mostrado entre 0 y 100
         const displayHunger = Math.min(100, Math.max(0, Math.round(averageHunger)));
         const hungerText = `HAMBRE GLOBAL: ${displayHunger}%`;
         this.ctx.strokeText(hungerText, barX + barWidth / 2, barY + barHeight / 2);
         this.ctx.fillText(hungerText, barX + barWidth / 2, barY + barHeight / 2);
 
-        // TIMER HASTA EXTINCIÓN
-        const timerY = barY + 60;
+        // ========== TÍTULO Y ESTADÍSTICAS (DEBAJO DE LA BARRA) ==========
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = 'bold 33px Arial';
         this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'middle';
+
+        // Título (debajo de la barra)
+        const titleY = barY + barHeight + 30;
+        this.ctx.fillText('Simulation IA world v1.5', 10, titleY);
+
+        // Estadísticas
+        this.ctx.fillText(`Population: ${population}`, 10, centerY - 50);
+        this.ctx.fillText(`Food: ${food}`, 10, centerY);
+
+        // ========== INDICADORES DE URGENCIA (LADO DERECHO) ==========
+
+        // CONTADOR DE CRIATURAS MURIENDO (lado derecho, arriba)
+        const urgencyX = this.ctx.canvas.width - 20; // Lado derecho
+        const urgencyY = 80;
+        this.ctx.textAlign = 'right'; // Alinear a la derecha
+
+        if (starvingIndividuals > 0) {
+            this.ctx.font = 'bold 42px Arial';
+            this.ctx.fillStyle = '#FF3333';
+            this.ctx.strokeStyle = 'black';
+            this.ctx.lineWidth = 3;
+            const starvingText = `💀 ${starvingIndividuals} MURIENDO DE HAMBRE`;
+            this.ctx.strokeText(starvingText, urgencyX, urgencyY);
+            this.ctx.fillText(starvingText, urgencyX, urgencyY);
+
+            // Efecto pulsante (lado derecho)
+            if (Math.floor(this.world.tick / 10) % 2 === 0) {
+                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                this.ctx.fillRect(this.ctx.canvas.width * 0.4, urgencyY - 30, this.ctx.canvas.width * 0.6, 60);
+            }
+        }
+
+        // TIMER HASTA EXTINCIÓN (lado derecho, debajo del contador)
+        const timerY = urgencyY + 70;
 
         // Calcular tiempo estimado hasta extinción (muy simplificado)
         let extinctionWarning = '';
@@ -356,10 +357,10 @@ export class SimulationService {
         if (foodPerCreature < 0.1) {
             extinctionWarning = '⏰ EXTINCIÓN INMINENTE - ¡DONA AHORA!';
             extinctionColor = '#FF0000';
-            // Efecto de parpadeo rápido
+            // Efecto de parpadeo rápido (lado derecho)
             if (Math.floor(this.world.tick / 5) % 2 === 0) {
                 this.ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
-                this.ctx.fillRect(0, timerY - 25, this.ctx.canvas.width, 50);
+                this.ctx.fillRect(this.ctx.canvas.width * 0.3, timerY - 25, this.ctx.canvas.width * 0.7, 50);
             }
         } else if (foodPerCreature < 0.3) {
             extinctionWarning = '⚠️ CRISIS ALIMENTARIA - Se necesita comida';
@@ -374,8 +375,9 @@ export class SimulationService {
             this.ctx.fillStyle = extinctionColor;
             this.ctx.strokeStyle = 'black';
             this.ctx.lineWidth = 3;
-            this.ctx.strokeText(extinctionWarning, 10, timerY);
-            this.ctx.fillText(extinctionWarning, 10, timerY);
+            this.ctx.textAlign = 'right'; // Alinear a la derecha
+            this.ctx.strokeText(extinctionWarning, urgencyX, timerY);
+            this.ctx.fillText(extinctionWarning, urgencyX, timerY);
         }
 
         // Resetear alineación para el resto del texto
