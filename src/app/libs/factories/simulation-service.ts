@@ -18,7 +18,7 @@ export class SimulationService {
     public addFood() {
         this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         this.soundService.play('foodSpawn');
-        this.addEvent('🍔 Comida agregada');
+        this.addEvent('🍔 Food added');
     }
 
     public addFoodBatch(quantity: number) {
@@ -26,11 +26,11 @@ export class SimulationService {
             this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
         }
         this.soundService.play('foodSpawn');
-        this.addEvent(`🍔 +${quantity} comida agregada`);
+        this.addEvent(`🍔 +${quantity} food added`);
 
         // Crear notificación GIGANTE temporal (dura ~3 segundos = 60 ticks aprox)
         this.donationNotification = {
-            message: `💎 ¡DONACIÓN! +${quantity} COMIDA 🍔`,
+            message: `💎 DONATION! +${quantity} FOOD 🍔`,
             ticksRemaining: 60
         };
 
@@ -170,19 +170,19 @@ export class SimulationService {
             // Comprobar si muere
             if (individual.age >= individual.maxAge) {
                 individual.isAlive = false;
-                this.addEvent('💀 Murió de vejez');
+                this.addEvent('💀 Died of old age');
             }
             // Muerte por hambre extrema
             if (individual.hunger >= 100) {
                 individual.isAlive = false;
                 const civ = this.world.civilizations.find(c => c.id === individual.civilizationId);
-                this.addEvent(`💀 ${civ?.name || 'Alguien'} murió de hambre`);
+                this.addEvent(`💀 ${civ?.name || 'Someone'} starved to death`);
             }
             // Muerte por agotamiento de energía
             if (individual.energy <= 0) {
                 individual.isAlive = false;
                 const civ = this.world.civilizations.find(c => c.id === individual.civilizationId);
-                this.addEvent(`💀 ${civ?.name || 'Alguien'} murió de agotamiento`);
+                this.addEvent(`💀 ${civ?.name || 'Someone'} died of exhaustion`);
             }
         });
 
@@ -219,7 +219,7 @@ export class SimulationService {
             if (this.foodSpawnTickCounter >= adjustedTicksPerSpawn) {
                 this.world.foodSources.push(this.foodFactory.createRandomFood(this.world.width, this.world.height));
                 this.soundService.play('foodSpawn');
-                this.addEvent('🌱 Comida apareció naturalmente');
+                this.addEvent('🌱 Food spawned naturally');
                 this.foodSpawnTickCounter = 0; // Resetear contador
                 console.log(`Food spawned! Interval: ${(adjustedTicksPerSpawn * this.world.cycleDurationMs / 1000).toFixed(2)}s (multiplier: ${spawnIntervalMultiplier}x)`);
             }
@@ -239,7 +239,7 @@ export class SimulationService {
             if (civilizationsAlive.length === 1) {
                 this.winnerCivilization = civilizationsAlive[0].name;
                 this.soundService.play('victory');
-                this.addEvent(`🏆 ${this.winnerCivilization} ha ganado!`);
+                this.addEvent(`🏆 ${this.winnerCivilization} has won!`);
                 this.stop();
                 this.onVictory?.(this.winnerCivilization); // Notificar victoria
             }
@@ -306,7 +306,7 @@ export class SimulationService {
         this.ctx.strokeStyle = 'black';
         this.ctx.lineWidth = 2;
         const displayHunger = Math.min(100, Math.max(0, Math.round(averageHunger)));
-        const hungerText = `HAMBRE GLOBAL: ${displayHunger}%`;
+        const hungerText = `GLOBAL HUNGER: ${displayHunger}%`;
         this.ctx.strokeText(hungerText, barX + barWidth / 2, barY + barHeight / 2);
         this.ctx.fillText(hungerText, barX + barWidth / 2, barY + barHeight / 2);
 
@@ -328,7 +328,7 @@ export class SimulationService {
 
         // CONTADOR DE CRIATURAS MURIENDO (lado derecho, arriba)
         const urgencyX = this.ctx.canvas.width - 20; // Lado derecho
-        const urgencyY = 80;
+        const urgencyY = 130; // Bajado para no superponerse con la barra
         this.ctx.textAlign = 'right'; // Alinear a la derecha
 
         if (starvingIndividuals > 0) {
@@ -336,7 +336,7 @@ export class SimulationService {
             this.ctx.fillStyle = '#FF3333';
             this.ctx.strokeStyle = 'black';
             this.ctx.lineWidth = 3;
-            const starvingText = `💀 ${starvingIndividuals} MURIENDO DE HAMBRE`;
+            const starvingText = `💀 ${starvingIndividuals} STARVING`;
             this.ctx.strokeText(starvingText, urgencyX, urgencyY);
             this.ctx.fillText(starvingText, urgencyX, urgencyY);
 
@@ -355,7 +355,7 @@ export class SimulationService {
         let extinctionColor = '#00FF00';
 
         if (foodPerCreature < 0.1) {
-            extinctionWarning = '⏰ EXTINCIÓN INMINENTE - ¡DONA AHORA!';
+            extinctionWarning = '⏰ IMMINENT EXTINCTION - DONATE NOW!';
             extinctionColor = '#FF0000';
             // Efecto de parpadeo rápido (lado derecho)
             if (Math.floor(this.world.tick / 5) % 2 === 0) {
@@ -363,10 +363,10 @@ export class SimulationService {
                 this.ctx.fillRect(this.ctx.canvas.width * 0.3, timerY - 25, this.ctx.canvas.width * 0.7, 50);
             }
         } else if (foodPerCreature < 0.3) {
-            extinctionWarning = '⚠️ CRISIS ALIMENTARIA - Se necesita comida';
+            extinctionWarning = '⚠️ FOOD CRISIS - Food needed';
             extinctionColor = '#FFA500';
         } else if (foodPerCreature < 0.5) {
-            extinctionWarning = '⚡ Comida escasa';
+            extinctionWarning = '⚡ Food scarce';
             extinctionColor = '#FFFF00';
         }
 
