@@ -281,7 +281,7 @@ export class SimulationService {
         const foodPerCreature = food / Math.max(1, population);
 
         // ========== BARRA DE HAMBRE GLOBAL (ARRIBA DE TODO) ==========
-        const barY = 20; // Arriba del canvas
+        const barY = 150; // Bajado para TikTok
         const barWidth = this.ctx.canvas.width * 0.6;
         const barHeight = 40;
         const barX = 10;
@@ -331,7 +331,7 @@ export class SimulationService {
 
         // CONTADOR DE CRIATURAS MURIENDO (lado derecho, arriba)
         const urgencyX = this.ctx.canvas.width - 20; // Lado derecho
-        const urgencyY = 130; // Bajado para no superponerse con la barra
+        const urgencyY = 260; // Bajado para alinearse con la barra
         this.ctx.textAlign = 'right'; // Alinear a la derecha
 
         if (starvingIndividuals > 0) {
