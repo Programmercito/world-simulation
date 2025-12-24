@@ -335,7 +335,7 @@ export class SimulationService {
         this.ctx.textAlign = 'right'; // Alinear a la derecha
 
         if (starvingIndividuals > 0) {
-            this.ctx.font = 'bold 42px Arial';
+            this.ctx.font = 'bold 52px Arial'; // MÁS GRANDE para mejor visibilidad
             this.ctx.fillStyle = '#FF3333';
             this.ctx.strokeStyle = 'black';
             this.ctx.lineWidth = 3;
@@ -374,7 +374,7 @@ export class SimulationService {
         }
 
         if (extinctionWarning) {
-            this.ctx.font = 'bold 38px Arial';
+            this.ctx.font = 'bold 48px Arial'; // MÁS GRANDE para alertas críticas
             this.ctx.fillStyle = extinctionColor;
             this.ctx.strokeStyle = 'black';
             this.ctx.lineWidth = 3;
