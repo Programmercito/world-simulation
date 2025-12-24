@@ -27,7 +27,22 @@ export class SimulationService {
         }
         this.soundService.play('foodSpawn');
         this.addEvent(`🍔 +${quantity} comida agregada`);
+
+        // Crear notificación GIGANTE temporal (dura ~3 segundos = 60 ticks aprox)
+        this.donationNotification = {
+            message: `💎 ¡DONACIÓN! +${quantity} COMIDA 🍔`,
+            ticksRemaining: 60
+        };
+
         console.log(`Added ${quantity} food items to the world`);
+    }
+
+    public removeFoodBatch(quantity: number) {
+        // Remove food items (for testing)
+        const itemsToRemove = Math.min(quantity, this.world.foodSources.length);
+        this.world.foodSources.splice(0, itemsToRemove);
+
+        console.log(`Removed ${itemsToRemove} food items from the world (requested: ${quantity})`);
     }
 
     public getCivilizations() {
@@ -52,6 +67,7 @@ export class SimulationService {
     private winnerCivilization: string | null = null; // Nombre de la civilización ganadora
     private foodSpawnTickCounter = 0; // Contador de ticks para spawn de comida
     private ticksPerFoodSpawn = 0; // Ticks necesarios para spawn de comida
+    private donationNotification: { message: string; ticksRemaining: number } | null = null; // Notificación temporal de donación
 
     constructor(canvasContext: CanvasRenderingContext2D, civilizations?: number, individuals?: number, food?: number, width?: number, height?: number, foodSpawnIntervalSeconds?: number) {
         this.ctx = canvasContext;
@@ -119,6 +135,14 @@ export class SimulationService {
     private update() {
         this.world.tick++;
 
+        // Actualizar notificación de donación
+        if (this.donationNotification) {
+            this.donationNotification.ticksRemaining--;
+            if (this.donationNotification.ticksRemaining <= 0) {
+                this.donationNotification = null;
+            }
+        }
+
         // Actualizar cada individuo
         this.world.individuals.forEach(individual => {
             if (!individual.isAlive) return;
@@ -146,6 +170,19 @@ export class SimulationService {
             // Comprobar si muere
             if (individual.age >= individual.maxAge) {
                 individual.isAlive = false;
+                this.addEvent('💀 Murió de vejez');
+            }
+            // Muerte por hambre extrema
+            if (individual.hunger >= 100) {
+                individual.isAlive = false;
+                const civ = this.world.civilizations.find(c => c.id === individual.civilizationId);
+                this.addEvent(`💀 ${civ?.name || 'Alguien'} murió de hambre`);
+            }
+            // Muerte por agotamiento de energía
+            if (individual.energy <= 0) {
+                individual.isAlive = false;
+                const civ = this.world.civilizations.find(c => c.id === individual.civilizationId);
+                this.addEvent(`💀 ${civ?.name || 'Alguien'} murió de agotamiento`);
             }
         });
 
@@ -248,13 +285,179 @@ export class SimulationService {
         const food = this.world.foodSources.length;
         this.ctx.fillText(`Food: ${food}`, 10, centerY);
 
+        // ========== INDICADORES DE URGENCIA ==========
+
+        // Calcular métricas de urgencia
+        const starvingIndividuals = this.world.individuals.filter(i => i.hunger > 70).length;
+        const averageHunger = this.world.individuals.reduce((sum, i) => sum + i.hunger, 0) / Math.max(1, population);
+        const foodPerCreature = food / Math.max(1, population);
+
+        // CONTADOR DE CRIATURAS MURIENDO
+        const urgencyY = 80; // Posición superior
+        if (starvingIndividuals > 0) {
+            this.ctx.font = 'bold 42px Arial';
+            this.ctx.fillStyle = '#FF3333'; // Rojo brillante
+            this.ctx.strokeStyle = 'black';
+            this.ctx.lineWidth = 3;
+            const starvingText = `💀 ${starvingIndividuals} MURIENDO DE HAMBRE`;
+            this.ctx.strokeText(starvingText, 10, urgencyY);
+            this.ctx.fillText(starvingText, 10, urgencyY);
+
+            // Efecto pulsante
+            if (Math.floor(this.world.tick / 10) % 2 === 0) {
+                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                this.ctx.fillRect(0, urgencyY - 30, this.ctx.canvas.width, 60);
+            }
+        }
+
+        // BARRA DE HAMBRE GLOBAL
+        const barY = urgencyY + 60;
+        const barWidth = this.ctx.canvas.width * 0.6;
+        const barHeight = 40;
+        const barX = 10;
+
+        // Fondo de la barra
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+
+        // Barra de hambre (rojo = más hambre)
+        // Limitar entre 0 y 1 para evitar desbordamiento
+        const hungerPercent = Math.min(1, Math.max(0, averageHunger / 100));
+        const hungerColor = hungerPercent > 0.7 ? '#FF3333' :
+            hungerPercent > 0.4 ? '#FFA500' : '#00FF00';
+        this.ctx.fillStyle = hungerColor;
+        this.ctx.fillRect(barX, barY, barWidth * hungerPercent, barHeight);
+
+        // Borde de la barra
+        this.ctx.strokeStyle = 'white';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+        // Texto de la barra
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = 'bold 28px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.strokeStyle = 'black';
+        this.ctx.lineWidth = 2;
+        // Limitar el valor mostrado entre 0 y 100
+        const displayHunger = Math.min(100, Math.max(0, Math.round(averageHunger)));
+        const hungerText = `HAMBRE GLOBAL: ${displayHunger}%`;
+        this.ctx.strokeText(hungerText, barX + barWidth / 2, barY + barHeight / 2);
+        this.ctx.fillText(hungerText, barX + barWidth / 2, barY + barHeight / 2);
+
+        // TIMER HASTA EXTINCIÓN
+        const timerY = barY + 60;
+        this.ctx.textAlign = 'left';
+
+        // Calcular tiempo estimado hasta extinción (muy simplificado)
+        let extinctionWarning = '';
+        let extinctionColor = '#00FF00';
+
+        if (foodPerCreature < 0.1) {
+            extinctionWarning = '⏰ EXTINCIÓN INMINENTE - ¡DONA AHORA!';
+            extinctionColor = '#FF0000';
+            // Efecto de parpadeo rápido
+            if (Math.floor(this.world.tick / 5) % 2 === 0) {
+                this.ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+                this.ctx.fillRect(0, timerY - 25, this.ctx.canvas.width, 50);
+            }
+        } else if (foodPerCreature < 0.3) {
+            extinctionWarning = '⚠️ CRISIS ALIMENTARIA - Se necesita comida';
+            extinctionColor = '#FFA500';
+        } else if (foodPerCreature < 0.5) {
+            extinctionWarning = '⚡ Comida escasa';
+            extinctionColor = '#FFFF00';
+        }
+
+        if (extinctionWarning) {
+            this.ctx.font = 'bold 38px Arial';
+            this.ctx.fillStyle = extinctionColor;
+            this.ctx.strokeStyle = 'black';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeText(extinctionWarning, 10, timerY);
+            this.ctx.fillText(extinctionWarning, 10, timerY);
+        }
+
+        // Resetear alineación para el resto del texto
+        this.ctx.textAlign = 'left';
+
         // Log de eventos (debajo de las estadísticas)
-        this.ctx.font = '20px Arial'; // Aumentado para legibilidad en móvil
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        this.ctx.font = 'bold 36px Arial'; // MUCHO MÁS GRANDE para visibilidad
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.lineWidth = 3;
         let eventY = centerY + 50;
         this.eventLog.forEach((event, index) => {
-            this.ctx.fillText(event, 10, eventY + (index * 27));
+            // Dibujar borde negro para mejor contraste
+            this.ctx.strokeText(event, 10, eventY + (index * 45));
+            this.ctx.fillText(event, 10, eventY + (index * 45));
         });
+
+        // NOTIFICACIÓN GIGANTE DE DONACIÓN
+        if (this.donationNotification) {
+            // Calcular opacidad basada en tiempo restante (fade out en los últimos 15 ticks)
+            const opacity = this.donationNotification.ticksRemaining < 15
+                ? this.donationNotification.ticksRemaining / 15
+                : 1;
+
+            // Fondo semi-transparente pulsante
+            const pulseIntensity = Math.sin(this.world.tick * 0.3) * 0.1 + 0.3;
+            this.ctx.fillStyle = `rgba(255, 215, 0, ${pulseIntensity * opacity})`; // Dorado pulsante
+
+            const notifY = this.ctx.canvas.height / 3;
+            const notifWidth = this.ctx.canvas.width * 0.9;
+            const notifHeight = 150;
+            const notifX = (this.ctx.canvas.width - notifWidth) / 2;
+
+            // Dibujar rectángulo con bordes redondeados
+            this.ctx.beginPath();
+            const radius = 20;
+            this.ctx.moveTo(notifX + radius, notifY);
+            this.ctx.lineTo(notifX + notifWidth - radius, notifY);
+            this.ctx.quadraticCurveTo(notifX + notifWidth, notifY, notifX + notifWidth, notifY + radius);
+            this.ctx.lineTo(notifX + notifWidth, notifY + notifHeight - radius);
+            this.ctx.quadraticCurveTo(notifX + notifWidth, notifY + notifHeight, notifX + notifWidth - radius, notifY + notifHeight);
+            this.ctx.lineTo(notifX + radius, notifY + notifHeight);
+            this.ctx.quadraticCurveTo(notifX, notifY + notifHeight, notifX, notifY + notifHeight - radius);
+            this.ctx.lineTo(notifX, notifY + radius);
+            this.ctx.quadraticCurveTo(notifX, notifY, notifX + radius, notifY);
+            this.ctx.closePath();
+            this.ctx.fill();
+
+            // Borde brillante
+            this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * opacity})`;
+            this.ctx.lineWidth = 5;
+            this.ctx.stroke();
+
+            // Texto GIGANTE
+            this.ctx.font = 'bold 72px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+
+            // Sombra del texto
+            this.ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowOffsetX = 4;
+            this.ctx.shadowOffsetY = 4;
+
+            // Texto con gradiente
+            const gradient = this.ctx.createLinearGradient(0, notifY, 0, notifY + notifHeight);
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+            gradient.addColorStop(1, `rgba(255, 200, 0, ${opacity})`);
+            this.ctx.fillStyle = gradient;
+
+            this.ctx.fillText(
+                this.donationNotification.message,
+                this.ctx.canvas.width / 2,
+                notifY + notifHeight / 2
+            );
+
+            // Resetear sombra
+            this.ctx.shadowColor = 'transparent';
+            this.ctx.shadowBlur = 0;
+            this.ctx.shadowOffsetX = 0;
+            this.ctx.shadowOffsetY = 0;
+        }
 
         // Mensaje de victoria (si hay ganador)
         if (this.winnerCivilization) {
@@ -489,7 +692,7 @@ export class SimulationService {
             const hunterPower = individual.strength + individual.energy + (individual.dna.aggression * 50);
             const preyPower = prey.strength + prey.energy + (prey.dna.aggression * 50);
 
-            if (hunterPower > preyPower * 1.2) { // Necesita superioridad clara
+            if (hunterPower > preyPower * 1.1) { // RELAJADO: Solo necesita 10% de superioridad (antes 20%)
                 // Victoria - el cazador consume a la presa
                 prey.isAlive = false;
                 individual.hunger = Math.max(0, individual.hunger - 80);

@@ -45,7 +45,11 @@ export class Canvas implements AfterViewInit, OnDestroy {
     this.foodEventSubscription = this.wsService.onFoodEvent().subscribe(event => {
       console.log('🍔 Received food event:', event);
       if (this.simulationService) {
-        this.simulationService.addFoodBatch(event.quantity);
+        if (event.type === 'ADD_FOOD') {
+          this.simulationService.addFoodBatch(event.quantity);
+        } else if (event.type === 'REMOVE_FOOD') {
+          this.simulationService.removeFoodBatch(event.quantity);
+        }
       }
     });
 
@@ -106,7 +110,7 @@ export class Canvas implements AfterViewInit, OnDestroy {
 
   increaseFoodInterval() {
     if (this.simulationService) {
-      this.currentFoodInterval = Math.min(60, this.currentFoodInterval + 1);
+      this.currentFoodInterval = this.currentFoodInterval + 1; // Sin límite máximo
       this.simulationService.setFoodSpawnInterval(this.currentFoodInterval);
       console.log(`Intervalo de comida aumentado a ${this.currentFoodInterval}s`);
     }

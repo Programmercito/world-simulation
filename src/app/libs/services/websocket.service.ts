@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject, timer } from 'rxjs';
 
 export interface FoodEvent {
-    type: 'ADD_FOOD';
+    type: 'ADD_FOOD' | 'REMOVE_FOOD';
     quantity: number;
     timestamp: number;
 }
@@ -46,7 +46,7 @@ export class WebSocketService {
                     const message: WebSocketMessage = JSON.parse(event.data);
                     console.log('📨 WebSocket message received:', message);
 
-                    if (message.type === 'ADD_FOOD') {
+                    if (message.type === 'ADD_FOOD' || message.type === 'REMOVE_FOOD') {
                         this.foodEvents$.next(message.data as FoodEvent);
                     }
                 } catch (error) {

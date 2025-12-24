@@ -1,5 +1,5 @@
 export interface FoodEvent {
-    type: 'ADD_FOOD';
+    type: 'ADD_FOOD' | 'REMOVE_FOOD';
     quantity: number;
     timestamp: number;
 }

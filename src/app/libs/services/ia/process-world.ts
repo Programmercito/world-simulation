@@ -82,13 +82,14 @@ export class ProcessWorld {
           individual.currentState = 'exploring';
           individual.targetId = undefined;
         }
-      } else if (individual.hunger > 95 && individual.energy > 25) {
-        // Hambre EXTREMA y aún tiene energía para cazar (último recurso)
+      } else if (individual.hunger > 70 && individual.energy > 25) {
+        // Hambre alta - intentar cazar como opción
         const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
         if (prey) {
           individual.currentState = 'hunting';
           individual.targetId = prey.id;
           individual.explorationTarget = undefined;
+          console.log(`🎯 HUNTING: ${individual.id.substring(0, 8)} targeting ${prey.id.substring(0, 8)} (hunger: ${individual.hunger.toFixed(1)}, energy: ${individual.energy.toFixed(1)})`);
         } else {
           // No hay presa, explorar con memoria
           this.exploreWithMemory(individual, world);
@@ -96,6 +97,16 @@ export class ProcessWorld {
       } else {
         // Hambre normal, explorar inteligentemente
         this.exploreWithMemory(individual, world);
+      }
+    } else if (individual.dna.aggression > 0.7 && individual.energy > 40 && individual.hunger < 80) {
+      // NUEVO: Criaturas agresivas cazan incluso sin hambre extrema
+      const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
+      if (prey) {
+        individual.currentState = 'hunting';
+        individual.targetId = prey.id;
+        individual.explorationTarget = undefined;
+        console.log(`⚔️ AGGRESSIVE HUNT: ${individual.id.substring(0, 8)} (aggression: ${individual.dna.aggression.toFixed(2)}) targeting ${prey.id.substring(0, 8)}`);
+        return; // Salir temprano para priorizar la caza
       }
     } else {
       // PRIORIDAD 3: Deambular o seguir al grupo (cuando están satisfechos)
@@ -216,7 +227,7 @@ export class ProcessWorld {
       ind.isAlive &&
       ind.id !== hunter.id &&
       ind.civilizationId !== hunter.civilizationId && // Solo atacar otras civilizaciones
-      ind.energy < hunter.energy * 0.8 && // Solo atacar más débiles
+      ind.energy < hunter.energy * 0.95 && // RELAJADO: Ahora puede atacar presas con hasta 95% de su energía
       Math.hypot(hunter.x - ind.x, hunter.y - ind.y) < visionRange
     );
 
