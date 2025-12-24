@@ -63,7 +63,7 @@ export class SimulationService {
     private lastTimestamp = 0;
     private isRunning = false;
     private simulationStartTime = 0; // Timestamp de inicio para escasez progresiva
-    private eventLog: string[] = []; // Log de eventos recientes (max 5)
+    private eventLog: Array<{ message: string; tick: number }> = []; // Log de eventos con timestamp
     private winnerCivilization: string | null = null; // Nombre de la civilización ganadora
     private foodSpawnTickCounter = 0; // Contador de ticks para spawn de comida
     private ticksPerFoodSpawn = 0; // Ticks necesarios para spawn de comida
@@ -103,7 +103,7 @@ export class SimulationService {
     }
 
     private addEvent(message: string) {
-        this.eventLog.unshift(message); // Agregar al inicio
+        this.eventLog.unshift({ message, tick: this.world.tick }); // Agregar al inicio con timestamp
         if (this.eventLog.length > 5) {
             this.eventLog.pop(); // Mantener solo los últimos 5
         }
@@ -142,6 +142,9 @@ export class SimulationService {
                 this.donationNotification = null;
             }
         }
+
+        // Limpiar eventos viejos (más de 70 ticks = ~3.5 segundos)
+        this.eventLog = this.eventLog.filter(event => (this.world.tick - event.tick) <= 70);
 
         // Actualizar cada individuo
         this.world.individuals.forEach(individual => {
@@ -318,7 +321,7 @@ export class SimulationService {
 
         // Título (debajo de la barra)
         const titleY = barY + barHeight + 30;
-        this.ctx.fillText('Simulation IA world v1.5', 10, titleY);
+        this.ctx.fillText('Simulation IA world v1.8', 10, titleY);
 
         // Estadísticas
         this.ctx.fillText(`Population: ${population}`, 10, centerY - 50);
@@ -383,16 +386,34 @@ export class SimulationService {
         // Resetear alineación para el resto del texto
         this.ctx.textAlign = 'left';
 
-        // Log de eventos (debajo de las estadísticas)
-        this.ctx.font = 'bold 36px Arial'; // MUCHO MÁS GRANDE para visibilidad
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        // Log de eventos (debajo de las estadísticas) con fade out
+        this.ctx.font = 'bold 36px Arial';
         this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
         this.ctx.lineWidth = 3;
         let eventY = centerY + 50;
+
+        const fadeOutDuration = 60; // Ticks para desaparecer completamente (3 segundos aprox)
+
         this.eventLog.forEach((event, index) => {
-            // Dibujar borde negro para mejor contraste
-            this.ctx.strokeText(event, 10, eventY + (index * 45));
-            this.ctx.fillText(event, 10, eventY + (index * 45));
+            const eventAge = this.world.tick - event.tick;
+
+            // Calcular opacidad: 1.0 cuando es nuevo, 0.0 después de fadeOutDuration ticks
+            let opacity = 1.0;
+            if (eventAge > fadeOutDuration) {
+                opacity = 0; // Completamente invisible
+            } else {
+                opacity = 1.0 - (eventAge / fadeOutDuration); // Fade out gradual
+            }
+
+            // Solo dibujar si tiene algo de opacidad
+            if (opacity > 0) {
+                this.ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.95})`;
+                this.ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.8})`;
+
+                // Dibujar borde negro para mejor contraste
+                this.ctx.strokeText(event.message, 10, eventY + (index * 45));
+                this.ctx.fillText(event.message, 10, eventY + (index * 45));
+            }
         });
 
         // NOTIFICACIÓN GIGANTE DE DONACIÓN
@@ -832,18 +853,18 @@ export class SimulationService {
                 this.ctx.arc(x, y, size, 0, 2 * Math.PI);
                 this.ctx.fill();
 
-                // Ojos
+                // Ojos (más grandes)
                 this.ctx.fillStyle = 'white';
                 this.ctx.beginPath();
-                this.ctx.arc(x - size * 0.3, y - size * 0.2, size * 0.25, 0, 2 * Math.PI);
-                this.ctx.arc(x + size * 0.3, y - size * 0.2, size * 0.25, 0, 2 * Math.PI);
+                this.ctx.arc(x - size * 0.3, y - size * 0.2, size * 0.45, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.3, y - size * 0.2, size * 0.45, 0, 2 * Math.PI);
                 this.ctx.fill();
 
                 // Pupilas
                 this.ctx.fillStyle = 'black';
                 this.ctx.beginPath();
-                this.ctx.arc(x - size * 0.3, y - size * 0.2, size * 0.12, 0, 2 * Math.PI);
-                this.ctx.arc(x + size * 0.3, y - size * 0.2, size * 0.12, 0, 2 * Math.PI);
+                this.ctx.arc(x - size * 0.3, y - size * 0.2, size * 0.22, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.3, y - size * 0.2, size * 0.22, 0, 2 * Math.PI);
                 this.ctx.fill();
 
                 // Boca
@@ -864,15 +885,15 @@ export class SimulationService {
                 this.ctx.lineWidth = 2;
                 this.ctx.strokeRect(x - size, y - size, size * 2, size * 2);
 
-                // Ojos cuadrados
+                // Ojos cuadrados (más grandes)
                 this.ctx.fillStyle = 'white';
-                this.ctx.fillRect(x - size * 0.5, y - size * 0.5, size * 0.4, size * 0.4);
-                this.ctx.fillRect(x + size * 0.1, y - size * 0.5, size * 0.4, size * 0.4);
+                this.ctx.fillRect(x - size * 0.6, y - size * 0.6, size * 0.6, size * 0.6);
+                this.ctx.fillRect(x, y - size * 0.6, size * 0.6, size * 0.6);
 
                 // Pupilas
                 this.ctx.fillStyle = 'black';
-                this.ctx.fillRect(x - size * 0.4, y - size * 0.4, size * 0.2, size * 0.2);
-                this.ctx.fillRect(x + size * 0.2, y - size * 0.4, size * 0.2, size * 0.2);
+                this.ctx.fillRect(x - size * 0.45, y - size * 0.45, size * 0.3, size * 0.3);
+                this.ctx.fillRect(x + size * 0.15, y - size * 0.45, size * 0.3, size * 0.3);
 
                 // Líneas de armadura
                 this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -898,18 +919,18 @@ export class SimulationService {
                 this.ctx.lineWidth = 2;
                 this.ctx.stroke();
 
-                // Ojos amenazantes
+                // Ojos amenazantes (más grandes)
                 this.ctx.fillStyle = 'red';
                 this.ctx.beginPath();
-                this.ctx.arc(x - size * 0.25, y - size * 0.2, size * 0.2, 0, 2 * Math.PI);
-                this.ctx.arc(x + size * 0.25, y - size * 0.2, size * 0.2, 0, 2 * Math.PI);
+                this.ctx.arc(x - size * 0.25, y - size * 0.2, size * 0.4, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.25, y - size * 0.2, size * 0.4, 0, 2 * Math.PI);
                 this.ctx.fill();
 
                 // Pupilas
                 this.ctx.fillStyle = 'black';
                 this.ctx.beginPath();
-                this.ctx.arc(x - size * 0.25, y - size * 0.2, size * 0.1, 0, 2 * Math.PI);
-                this.ctx.arc(x + size * 0.25, y - size * 0.2, size * 0.1, 0, 2 * Math.PI);
+                this.ctx.arc(x - size * 0.25, y - size * 0.2, size * 0.2, 0, 2 * Math.PI);
+                this.ctx.arc(x + size * 0.25, y - size * 0.2, size * 0.2, 0, 2 * Math.PI);
                 this.ctx.fill();
 
                 // Colmillos

@@ -26,8 +26,8 @@ export class Canvas implements AfterViewInit, OnDestroy {
   initialFood = 30; // Más comida inicial
   initialCivilizations = 5; // Menos civilizaciones
   initialIndividuals = 8; // Menos individuos por civilización
-  foodSpawnInterval = 8; // Aparece comida cada 8 segundos (menos frecuente)
-  currentFoodInterval = 8; // Intervalo actual (se actualiza dinámicamente)
+  foodSpawnInterval = 60; // Aparece comida cada 60 segundos (muy poco frecuente)
+  currentFoodInterval = 60; // Intervalo actual (se actualiza dinámicamente)
   civilizations: Array<{ name: string, color: string, population: number, kills: number }> = [];
 
   ngAfterViewInit() {
