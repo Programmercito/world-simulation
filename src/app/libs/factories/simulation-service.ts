@@ -258,10 +258,42 @@ export class SimulationService {
 
         // Dibujar comida
         this.world.foodSources.forEach(food => {
-            this.ctx.fillStyle = 'lightgreen';
+            const radius = 8 + (food.energyValue / 10); // Tamaño mayor para galleta
+            const gradient = this.ctx.createRadialGradient(food.x - radius/4, food.y - radius/4, 0, food.x, food.y, radius);
+            gradient.addColorStop(0, '#D2B48C'); // Marrón claro (galleta)
+            gradient.addColorStop(0.7, '#A0522D'); // Marrón Siena
+            gradient.addColorStop(1, '#8B4513'); // Marrón oscuro
+
+            this.ctx.fillStyle = gradient;
             this.ctx.beginPath();
-            this.ctx.arc(food.x, food.y, 5, 0, 2 * Math.PI);
+            this.ctx.arc(food.x, food.y, radius, 0, 2 * Math.PI);
             this.ctx.fill();
+
+            // Agregar sombra para profundidad
+            this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            this.ctx.shadowBlur = 4;
+            this.ctx.shadowOffsetX = 3;
+            this.ctx.shadowOffsetY = 3;
+
+            this.ctx.fill();
+
+            // Dibujar chips de chocolate (puntos negros)
+            this.ctx.fillStyle = '#2F1B14';
+            const chipCount = Math.floor(food.energyValue / 20) + 1;
+            for (let i = 0; i < chipCount; i++) {
+                const angle = (i / chipCount) * 2 * Math.PI;
+                const chipX = food.x + Math.cos(angle) * (radius * 0.6);
+                const chipY = food.y + Math.sin(angle) * (radius * 0.6);
+                this.ctx.beginPath();
+                this.ctx.arc(chipX, chipY, radius * 0.15, 0, 2 * Math.PI);
+                this.ctx.fill();
+            }
+
+            // Reset shadow
+            this.ctx.shadowColor = 'transparent';
+            this.ctx.shadowBlur = 0;
+            this.ctx.shadowOffsetX = 0;
+            this.ctx.shadowOffsetY = 0;
         });
 
         // Dibujar individuos
