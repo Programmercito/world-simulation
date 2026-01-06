@@ -189,6 +189,36 @@ export class SimulationService {
             }
         });
 
+        // Actualizar movimiento de la comida (se mueve como un bichito)
+        this.world.foodSources.forEach(food => {
+            if (food.isConsumed) return;
+
+            // Cambiar dirección aleatoriamente (comportamiento de insecto errático)
+            if (Math.random() < 0.05) { // 5% de probabilidad cada tick
+                food.angle += (Math.random() - 0.5) * Math.PI * 0.5; // Girar hasta ±45°
+            }
+
+            // Movimiento en la dirección actual
+            const moveX = Math.cos(food.angle) * food.speed;
+            const moveY = Math.sin(food.angle) * food.speed;
+
+            food.x += moveX;
+            food.y += moveY;
+
+            // Mantener dentro de los límites del mundo (rebotar en los bordes)
+            if (food.x <= 0 || food.x >= this.world.width) {
+                food.angle = Math.PI - food.angle; // Invertir dirección horizontal
+                food.x = Math.max(0, Math.min(this.world.width, food.x));
+            }
+            if (food.y <= 0 || food.y >= this.world.height) {
+                food.angle = -food.angle; // Invertir dirección vertical
+                food.y = Math.max(0, Math.min(this.world.height, food.y));
+            }
+
+            // Actualizar animación de wiggle
+            food.wiggleOffset += 0.15;
+        });
+
         // Lógica de reproducción
         this.handleReproduction();
 
@@ -256,44 +286,129 @@ export class SimulationService {
         // Limpiar el canvas
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-        // Dibujar comida
+        // Dibujar comida (bichitos/insectos que se mueven)
         this.world.foodSources.forEach(food => {
-            const radius = 8 + (food.energyValue / 10); // Tamaño mayor para galleta
-            const gradient = this.ctx.createRadialGradient(food.x - radius/4, food.y - radius/4, 0, food.x, food.y, radius);
-            gradient.addColorStop(0, '#D2B48C'); // Marrón claro (galleta)
-            gradient.addColorStop(0.7, '#A0522D'); // Marrón Siena
-            gradient.addColorStop(1, '#8B4513'); // Marrón oscuro
+            const radius = 6 + (food.energyValue / 15); // Tamaño basado en valor energético
 
+            this.ctx.save();
+
+            // Rotar según la dirección de movimiento
+            this.ctx.translate(food.x, food.y);
+            this.ctx.rotate(food.angle);
+
+            // CUERPO PRINCIPAL (forma ovalada)
+            this.ctx.fillStyle = '#8B6F47'; // Color café-marrón (insecto)
+            this.ctx.beginPath();
+            this.ctx.ellipse(0, 0, radius * 1.2, radius * 0.8, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+
+            // Segmento trasero (abdomen)
+            this.ctx.fillStyle = '#6B5437';
+            this.ctx.beginPath();
+            this.ctx.ellipse(-radius * 0.8, 0, radius * 0.9, radius * 0.6, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+
+            // Cabeza (pequeña)
+            this.ctx.fillStyle = '#5B4427';
+            this.ctx.beginPath();
+            this.ctx.arc(radius * 0.9, 0, radius * 0.5, 0, 2 * Math.PI);
+            this.ctx.fill();
+
+            // ANTENAS (animadas con wiggle)
+            this.ctx.strokeStyle = '#4B3417';
+            this.ctx.lineWidth = 1.5;
+            const antennaWiggle = Math.sin(food.wiggleOffset) * 0.3;
+
+            // Antena izquierda
+            this.ctx.beginPath();
+            this.ctx.moveTo(radius * 0.9, 0);
+            this.ctx.quadraticCurveTo(
+                radius * 1.3,
+                -radius * 0.6 + antennaWiggle * radius,
+                radius * 1.5,
+                -radius * 0.9 - antennaWiggle * radius * 0.5
+            );
+            this.ctx.stroke();
+
+            // Bolita al final de antena izquierda
+            this.ctx.fillStyle = '#3B2417';
+            this.ctx.beginPath();
+            this.ctx.arc(radius * 1.5, -radius * 0.9 - antennaWiggle * radius * 0.5, radius * 0.15, 0, 2 * Math.PI);
+            this.ctx.fill();
+
+            // Antena derecha
+            this.ctx.strokeStyle = '#4B3417';
+            this.ctx.beginPath();
+            this.ctx.moveTo(radius * 0.9, 0);
+            this.ctx.quadraticCurveTo(
+                radius * 1.3,
+                radius * 0.6 - antennaWiggle * radius,
+                radius * 1.5,
+                radius * 0.9 + antennaWiggle * radius * 0.5
+            );
+            this.ctx.stroke();
+
+            // Bolita al final de antena derecha
+            this.ctx.fillStyle = '#3B2417';
+            this.ctx.beginPath();
+            this.ctx.arc(radius * 1.5, radius * 0.9 + antennaWiggle * radius * 0.5, radius * 0.15, 0, 2 * Math.PI);
+            this.ctx.fill();
+
+            // PATAS (3 pares, animadas con wiggle)
+            this.ctx.strokeStyle = '#3B2417';
+            this.ctx.lineWidth = 1.2;
+            const legWiggle = Math.sin(food.wiggleOffset * 1.5) * 0.2;
+
+            // Patas superiores (par 1)
+            this.ctx.beginPath();
+            this.ctx.moveTo(radius * 0.4, -radius * 0.5);
+            this.ctx.lineTo(radius * 0.2, -radius * 1.2 + legWiggle * radius);
+            this.ctx.stroke();
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(radius * 0.4, radius * 0.5);
+            this.ctx.lineTo(radius * 0.2, radius * 1.2 - legWiggle * radius);
+            this.ctx.stroke();
+
+            // Patas medias (par 2)
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, -radius * 0.6);
+            this.ctx.lineTo(-radius * 0.2, -radius * 1.3 - legWiggle * radius);
+            this.ctx.stroke();
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, radius * 0.6);
+            this.ctx.lineTo(-radius * 0.2, radius * 1.3 + legWiggle * radius);
+            this.ctx.stroke();
+
+            // Patas traseras (par 3)
+            this.ctx.beginPath();
+            this.ctx.moveTo(-radius * 0.5, -radius * 0.5);
+            this.ctx.lineTo(-radius * 0.8, -radius * 1.1 + legWiggle * radius);
+            this.ctx.stroke();
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(-radius * 0.5, radius * 0.5);
+            this.ctx.lineTo(-radius * 0.8, radius * 1.1 - legWiggle * radius);
+            this.ctx.stroke();
+
+            // Ojos pequeños
+            this.ctx.fillStyle = 'black';
+            this.ctx.beginPath();
+            this.ctx.arc(radius * 1.1, -radius * 0.2, radius * 0.12, 0, 2 * Math.PI);
+            this.ctx.arc(radius * 1.1, radius * 0.2, radius * 0.12, 0, 2 * Math.PI);
+            this.ctx.fill();
+
+            // Brillo en el cuerpo
+            const gradient = this.ctx.createRadialGradient(-radius * 0.3, -radius * 0.2, 0, 0, 0, radius);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
             this.ctx.fillStyle = gradient;
             this.ctx.beginPath();
-            this.ctx.arc(food.x, food.y, radius, 0, 2 * Math.PI);
+            this.ctx.ellipse(0, 0, radius * 1.2, radius * 0.8, 0, 0, 2 * Math.PI);
             this.ctx.fill();
 
-            // Agregar sombra para profundidad
-            this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            this.ctx.shadowBlur = 4;
-            this.ctx.shadowOffsetX = 3;
-            this.ctx.shadowOffsetY = 3;
-
-            this.ctx.fill();
-
-            // Dibujar chips de chocolate (puntos negros)
-            this.ctx.fillStyle = '#2F1B14';
-            const chipCount = Math.floor(food.energyValue / 20) + 1;
-            for (let i = 0; i < chipCount; i++) {
-                const angle = (i / chipCount) * 2 * Math.PI;
-                const chipX = food.x + Math.cos(angle) * (radius * 0.6);
-                const chipY = food.y + Math.sin(angle) * (radius * 0.6);
-                this.ctx.beginPath();
-                this.ctx.arc(chipX, chipY, radius * 0.15, 0, 2 * Math.PI);
-                this.ctx.fill();
-            }
-
-            // Reset shadow
-            this.ctx.shadowColor = 'transparent';
-            this.ctx.shadowBlur = 0;
-            this.ctx.shadowOffsetX = 0;
-            this.ctx.shadowOffsetY = 0;
+            this.ctx.restore();
         });
 
         // Dibujar individuos

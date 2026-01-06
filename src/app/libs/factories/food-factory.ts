@@ -7,7 +7,11 @@ export class FoodFactory {
             x: Math.random() * worldWidth,
             y: Math.random() * worldHeight,
             energyValue: 20 + Math.random() * 80,
-            isConsumed: false
+            isConsumed: false,
+            // Propiedades de movimiento - comida se mueve como un bichito
+            speed: 0.3 + Math.random() * 0.7, // Velocidad lenta (0.3-1.0)
+            angle: Math.random() * Math.PI * 2, // Dirección inicial aleatoria
+            wiggleOffset: Math.random() * Math.PI * 2 // Offset inicial aleatorio para animación
         };
     }
 }
