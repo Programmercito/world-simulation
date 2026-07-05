@@ -22,7 +22,7 @@ O ejecutar por separado:
 
 ```bash
 cd server
-npm start
+npm start 
 ```
 
 **Terminal 2 - Frontend:**
