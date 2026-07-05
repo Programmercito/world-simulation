@@ -4,10 +4,9 @@ import { World } from '../../models/world';
 import { Food } from '../../models/food';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProcessWorld {
-
   /**
    * Procesa la IA de un individuo basado en su ADN y el estado del mundo.
    */
@@ -21,7 +20,7 @@ export class ProcessWorld {
     individual.fearLevel = Math.max(0, individual.fearLevel);
 
     // Si el objetivo de comida ya no existe, lo olvidamos.
-    if (individual.targetId && !world.foodSources.find(f => f.id === individual.targetId)) {
+    if (individual.targetId && !world.foodSources.find((f) => f.id === individual.targetId)) {
       individual.targetId = undefined;
       individual.currentState = 'wandering';
     }
@@ -47,10 +46,12 @@ export class ProcessWorld {
 
     // PRIORIDAD 1: Reproducción cuando están bien alimentados y tienen edad
     // NUEVO: Reproducción tiene prioridad sobre comida cuando no hay hambre crítica
-    if (individual.age > 3 &&
+    if (
+      individual.age > 3 &&
       individual.energy > energyThreshold &&
       individual.hunger < 50 && // Solo si no tienen mucha hambre
-      individual.cooldownUntil < world.tick) {
+      individual.cooldownUntil < world.tick
+    ) {
       // Buscar pareja cercana compatible
       const potentialMate = this.findCompatibleMate(individual, world, effectiveVisionRange);
       if (potentialMate) {
@@ -76,7 +77,7 @@ export class ProcessWorld {
         this.rememberFoodLocation(individual, closestFood.x, closestFood.y, world.tick);
       } else if (individual.currentState === 'hunting') {
         // Ya está cazando, mantener el estado
-        const prey = world.individuals.find(i => i.id === individual.targetId && i.isAlive);
+        const prey = world.individuals.find((i) => i.id === individual.targetId && i.isAlive);
         if (!prey) {
           // Presa perdida
           individual.currentState = 'exploring';
@@ -89,7 +90,9 @@ export class ProcessWorld {
           individual.currentState = 'hunting';
           individual.targetId = prey.id;
           individual.explorationTarget = undefined;
-          console.log(`🎯 HUNTING: ${individual.id.substring(0, 8)} targeting ${prey.id.substring(0, 8)} (hunger: ${individual.hunger.toFixed(1)}, energy: ${individual.energy.toFixed(1)})`);
+          console.log(
+            `🎯 HUNTING: ${individual.id.substring(0, 8)} targeting ${prey.id.substring(0, 8)} (hunger: ${individual.hunger.toFixed(1)}, energy: ${individual.energy.toFixed(1)})`,
+          );
         } else {
           // No hay presa, explorar con memoria
           this.exploreWithMemory(individual, world);
@@ -98,22 +101,33 @@ export class ProcessWorld {
         // Hambre normal, explorar inteligentemente
         this.exploreWithMemory(individual, world);
       }
-    } else if (individual.dna.aggression > 0.7 && individual.energy > 40 && individual.hunger < 80) {
+    } else if (
+      individual.dna.aggression > 0.7 &&
+      individual.energy > 40 &&
+      individual.hunger < 80
+    ) {
       // NUEVO: Criaturas agresivas cazan incluso sin hambre extrema
       const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
       if (prey) {
         individual.currentState = 'hunting';
         individual.targetId = prey.id;
         individual.explorationTarget = undefined;
-        console.log(`⚔️ AGGRESSIVE HUNT: ${individual.id.substring(0, 8)} (aggression: ${individual.dna.aggression.toFixed(2)}) targeting ${prey.id.substring(0, 8)}`);
+        console.log(
+          `⚔️ AGGRESSIVE HUNT: ${individual.id.substring(0, 8)} (aggression: ${individual.dna.aggression.toFixed(2)}) targeting ${prey.id.substring(0, 8)}`,
+        );
         return; // Salir temprano para priorizar la caza
       }
     } else {
       // PRIORIDAD 3: Deambular o seguir al grupo (cuando están satisfechos)
       if (individual.socialBond) {
-        const bondedIndividual = world.individuals.find(i => i.id === individual.socialBond && i.isAlive);
+        const bondedIndividual = world.individuals.find(
+          (i) => i.id === individual.socialBond && i.isAlive,
+        );
         if (bondedIndividual) {
-          const distance = Math.hypot(individual.x - bondedIndividual.x, individual.y - bondedIndividual.y);
+          const distance = Math.hypot(
+            individual.x - bondedIndividual.x,
+            individual.y - bondedIndividual.y,
+          );
           if (distance > effectiveVisionRange * 0.5) {
             // Seguir al individuo vinculado si está lejos
             individual.currentState = 'following';
@@ -135,12 +149,13 @@ export class ProcessWorld {
 
   private detectThreats(individual: Individual, world: World, visionRange: number): void {
     // Buscar individuos agresivos cercanos de otras civilizaciones
-    const threats = world.individuals.filter(other =>
-      other.isAlive &&
-      other.id !== individual.id &&
-      other.civilizationId !== individual.civilizationId &&
-      other.dna.aggression > 0.7 &&
-      Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange * 0.8
+    const threats = world.individuals.filter(
+      (other) =>
+        other.isAlive &&
+        other.id !== individual.id &&
+        other.civilizationId !== individual.civilizationId &&
+        other.dna.aggression > 0.7 &&
+        Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange * 0.8,
     );
 
     if (threats.length > 0) {
@@ -167,7 +182,8 @@ export class ProcessWorld {
     if (individual.lastFoodLocations && individual.lastFoodLocations.length > 0) {
       // Ir a la ubicación más reciente si no tiene objetivo
       if (!individual.explorationTarget) {
-        const recentLocation = individual.lastFoodLocations[individual.lastFoodLocations.length - 1];
+        const recentLocation =
+          individual.lastFoodLocations[individual.lastFoodLocations.length - 1];
         individual.explorationTarget = { x: recentLocation.x, y: recentLocation.y };
       }
     }
@@ -175,30 +191,37 @@ export class ProcessWorld {
     if (!individual.explorationTarget) {
       individual.explorationTarget = {
         x: Math.random() * world.width,
-        y: Math.random() * world.height
+        y: Math.random() * world.height,
       };
     }
   }
 
-  private findCompatibleMate(individual: Individual, world: World, visionRange: number): Individual | null {
-    const potentialMates = world.individuals.filter(other =>
-      other.isAlive &&
-      other.id !== individual.id &&
-      other.civilizationId === individual.civilizationId &&
-      other.age > 3 &&
-      other.energy > 40 && // REDUCIDO: Menos exigente con energía
-      other.hunger < 60 && // NUEVO: Solo si no tienen mucha hambre
-      other.cooldownUntil < world.tick &&
-      Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange
+  private findCompatibleMate(
+    individual: Individual,
+    world: World,
+    visionRange: number,
+  ): Individual | null {
+    const potentialMates = world.individuals.filter(
+      (other) =>
+        other.isAlive &&
+        other.id !== individual.id &&
+        other.civilizationId === individual.civilizationId &&
+        other.age > 3 &&
+        other.energy > 40 && // REDUCIDO: Menos exigente con energía
+        other.hunger < 60 && // NUEVO: Solo si no tienen mucha hambre
+        other.cooldownUntil < world.tick &&
+        Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange,
     );
 
     if (potentialMates.length === 0) return null;
 
     // Preferir parejas con DNA similar (más realista)
     potentialMates.sort((a, b) => {
-      const similarityA = Math.abs(individual.dna.resilience - a.dna.resilience) +
+      const similarityA =
+        Math.abs(individual.dna.resilience - a.dna.resilience) +
         Math.abs(individual.dna.curiosity - a.dna.curiosity);
-      const similarityB = Math.abs(individual.dna.resilience - b.dna.resilience) +
+      const similarityB =
+        Math.abs(individual.dna.resilience - b.dna.resilience) +
         Math.abs(individual.dna.curiosity - b.dna.curiosity);
       return similarityA - similarityB;
     });
@@ -222,13 +245,18 @@ export class ProcessWorld {
     return closestFood;
   }
 
-  private findWeakestPrey(hunter: Individual, world: World, visionRange: number): Individual | null {
-    const preys = world.individuals.filter(ind =>
-      ind.isAlive &&
-      ind.id !== hunter.id &&
-      ind.civilizationId !== hunter.civilizationId && // Solo atacar otras civilizaciones
-      ind.energy < hunter.energy * 0.95 && // RELAJADO: Ahora puede atacar presas con hasta 95% de su energía
-      Math.hypot(hunter.x - ind.x, hunter.y - ind.y) < visionRange
+  private findWeakestPrey(
+    hunter: Individual,
+    world: World,
+    visionRange: number,
+  ): Individual | null {
+    const preys = world.individuals.filter(
+      (ind) =>
+        ind.isAlive &&
+        ind.id !== hunter.id &&
+        ind.civilizationId !== hunter.civilizationId && // Solo atacar otras civilizaciones
+        ind.energy < hunter.energy * 0.95 && // RELAJADO: Ahora puede atacar presas con hasta 95% de su energía
+        Math.hypot(hunter.x - ind.x, hunter.y - ind.y) < visionRange,
     );
 
     if (preys.length === 0) return null;

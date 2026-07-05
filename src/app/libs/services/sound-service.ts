@@ -34,7 +34,7 @@ export class SoundService {
       // Clonar el audio para permitir múltiples reproducciones simultáneas
       const clone = sound.cloneNode() as HTMLAudioElement;
       clone.volume = 0.3;
-      clone.play().catch(err => {
+      clone.play().catch((err) => {
         // Ignorar errores de autoplay
         console.debug('Audio play prevented:', err);
       });

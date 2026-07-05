@@ -1,0 +1,63 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Angular 20 (standalone components, SCSS, signals), TypeScript 5.9, pnpm workspace.
+  Backend: Node.js/Express + `ws` WebSocket server in `server/` (npm, ts-node).
+  Architecture: Client-side canvas simulation driven by `SimulationService`; HTTP/WebSocket API broadcasts food events.
+  Testing: Karma + Jasmine for Angular unit tests; `server/` has no test runner yet.
+  Style: Prettier configured in root `package.json`; strict TypeScript everywhere.
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    follow_existing_code_patterns: true
+    tdd: true
+    test_command: 'ng test --watch=false --browsers=ChromeHeadless'
+  verify:
+    test_command: 'ng test --watch=false --browsers=ChromeHeadless'
+    build_command: 'ng build && cd server && npm run build'
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+
+testing:
+  strict_tdd: true
+  detected: '2026-07-05'
+  runner:
+    command: 'ng test'
+    framework: 'Karma + Jasmine'
+  layers:
+    unit:
+      available: true
+      tool: 'Karma + Jasmine'
+    integration:
+      available: false
+      tool: null
+    e2e:
+      available: false
+      tool: null
+  coverage:
+    available: true
+    command: 'ng test --code-coverage'
+  quality:
+    linter:
+      available: false
+      command: null
+    type_checker:
+      available: true
+      command: 'npx tsc --noEmit'
+    formatter:
+      available: true
+      command: 'npx prettier --check .'
+  notes:
+    - 'Backend (server/) currently has no test runner or test scripts. Add one before applying TDD to server changes.'

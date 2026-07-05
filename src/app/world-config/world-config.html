@@ -1,0 +1,103 @@
+<form class="world-config-form" (ngSubmit)="onSubmit()">
+  <div class="config-grid">
+    <div class="config-field">
+      <label for="worldWidth">Ancho del mundo</label>
+      <div class="input-wrap">
+        <input
+          id="worldWidth"
+          type="number"
+          name="worldWidth"
+          [(ngModel)]="config.worldWidth"
+          min="500"
+          max="5000"
+          data-testid="worldWidth"
+        />
+        <span class="input-unit">px</span>
+      </div>
+    </div>
+
+    <div class="config-field">
+      <label for="worldHeight">Alto del mundo</label>
+      <div class="input-wrap">
+        <input
+          id="worldHeight"
+          type="number"
+          name="worldHeight"
+          [(ngModel)]="config.worldHeight"
+          min="500"
+          max="5000"
+          data-testid="worldHeight"
+        />
+        <span class="input-unit">px</span>
+      </div>
+    </div>
+
+    <div class="config-field">
+      <label for="initialFood">Comida inicial</label>
+      <div class="input-wrap">
+        <input
+          id="initialFood"
+          type="number"
+          name="initialFood"
+          [(ngModel)]="config.initialFood"
+          min="0"
+          max="5000"
+          data-testid="initialFood"
+        />
+      </div>
+    </div>
+
+    <div class="config-field">
+      <label for="initialCivilizations">Civilizaciones</label>
+      <div class="input-wrap">
+        <input
+          id="initialCivilizations"
+          type="number"
+          name="initialCivilizations"
+          [(ngModel)]="config.initialCivilizations"
+          min="1"
+          max="20"
+          data-testid="initialCivilizations"
+        />
+      </div>
+    </div>
+
+    <div class="config-field">
+      <label for="initialIndividuals">Individuos por civilización</label>
+      <div class="input-wrap">
+        <input
+          id="initialIndividuals"
+          type="number"
+          name="initialIndividuals"
+          [(ngModel)]="config.initialIndividuals"
+          min="1"
+          max="100"
+          data-testid="initialIndividuals"
+        />
+      </div>
+    </div>
+
+    <div class="config-field">
+      <label for="foodSpawnInterval">Comida automática cada</label>
+      <div class="input-wrap">
+        <input
+          id="foodSpawnInterval"
+          type="number"
+          name="foodSpawnInterval"
+          [(ngModel)]="config.foodSpawnInterval"
+          min="0"
+          max="60"
+          step="0.1"
+          data-testid="foodSpawnInterval"
+        />
+        <span class="input-unit">seg</span>
+      </div>
+      <span class="field-hint">0 = desactivado</span>
+    </div>
+  </div>
+
+  <button type="submit" class="start-btn" data-testid="createWorldBtn">
+    <span class="btn-icon">✦</span>
+    Crear mundo
+  </button>
+</form>

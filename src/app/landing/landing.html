@@ -1,0 +1,59 @@
+<section class="landing-page">
+  <header class="hero">
+    <div class="hero-badge">Simulación de ecosistemas</div>
+    <h1 class="hero-title" data-testid="hero-title">
+      <span class="title-world">World</span>
+      <span class="title-simulation"> Simulation</span>
+    </h1>
+    <p class="hero-intro" data-testid="hero-intro">
+      Crea civilizaciones, sembrá comida y observá cómo la inteligencia artificial lucha por
+      sobrevivir en un mundo que evoluciona tick a tick.
+    </p>
+    <a class="hero-cta" href="#config" data-testid="cta-btn">Configurar mundo</a>
+  </header>
+
+  <section class="how-it-works">
+    <h2 class="section-title">¿Cómo funciona?</h2>
+    <div class="feature-grid">
+      <article class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <h3>Diseñá tu mundo</h3>
+        <p>
+          Elegí el tamaño del planeta, la cantidad de civilizaciones y cuántos individuos comienzan
+          la aventura.
+        </p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-icon">🌱</div>
+        <h3>Controlá la comida</h3>
+        <p>
+          Agregá comida en lotes, colocala con precisión en el mapa o dejá que aparezca
+          automáticamente cada cierto tiempo.
+        </p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Mirá la IA evolucionar</h3>
+        <p>
+          Cada individuo busca comida, pareja y territorio. Las civilizaciones compiten hasta que
+          solo queda una.
+        </p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3>Descubrí al ganador</h3>
+        <p>
+          Seguí el registro de eventos y las estadísticas en tiempo real. ¿Quién dominará tu mundo?
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="config-section" id="config">
+    <div class="config-header">
+      <h2 class="section-title">Configuración</h2>
+      <p class="config-subtitle">Ajustá los parámetros y creá un mundo nuevo cuando quieras.</p>
+    </div>
+    <app-world-config (createWorld)="onCreateWorld($event)"></app-world-config>
+  </section>
+</section>

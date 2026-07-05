@@ -1,0 +1,108 @@
+<div class="world-view">
+  <div class="world-header">
+    <div>
+      <h2 class="world-title">Vista del mundo</h2>
+      <p class="world-subtitle">
+        Usá los controles laterales para manipular la comida o activá el modo colocación.
+      </p>
+    </div>
+    <div class="canvas-meta">
+      Canvas: <span>{{ canvasInfo() }}</span>
+    </div>
+  </div>
+
+  <div class="world-body">
+    <aside class="side-panels">
+      <div class="panel stats-panel">
+        <h4>Estadísticas</h4>
+
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <span class="stat-value" data-testid="population">{{ stats().population }}</span>
+            <span class="stat-label">Población</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value" data-testid="food">{{ stats().food }}</span>
+            <span class="stat-label">Comida</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ stats().seekingMate }}</span>
+            <span class="stat-label">Buscando pareja</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{{ stats().tick }}</span>
+            <span class="stat-label">Tick</span>
+          </div>
+        </div>
+
+        <div class="food-section">
+          <div class="food-interval-control">
+            <span class="control-label">Comida automática</span>
+            <div class="interval-controls">
+              <button class="interval-btn" (click)="decreaseFoodInterval()">-</button>
+              <span class="interval-value">{{ currentFoodInterval() }}s</span>
+              <button class="interval-btn" (click)="increaseFoodInterval()">+</button>
+            </div>
+          </div>
+
+          <div class="food-actions">
+            <span class="control-label">Agregar comida</span>
+            <div class="food-controls">
+              <button data-testid="addFood1" (click)="addFoodBatch(1)">+1</button>
+              <button data-testid="addFood10" (click)="addFoodBatch(10)">+10</button>
+              <button data-testid="addFood50" (click)="addFoodBatch(50)">+50</button>
+              <button data-testid="removeFood10" class="danger" (click)="removeFoodBatch(10)">
+                -10
+              </button>
+              <button data-testid="removeFood50" class="danger" (click)="removeFoodBatch(50)">
+                -50
+              </button>
+            </div>
+          </div>
+
+          <button
+            class="placement-toggle"
+            data-testid="togglePlacement"
+            [class.active]="placementMode()"
+            (click)="togglePlacementMode()"
+          >
+            {{ placementMode() ? 'Cancelar colocación' : 'Colocar comida manual' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="panel civilizations-panel">
+        <h4>Civilizaciones</h4>
+        <div class="civ-list">
+          <div class="civ-item" *ngFor="let civ of civilizations()">
+            <span class="civ-color" [style.background-color]="civ.color"></span>
+            <span class="civ-name">{{ civ.name }}</span>
+            <span class="civ-count">{{ civ.population }}</span>
+            <span class="civ-kills" title="Kills">⚔️{{ civ.kills }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel event-log">
+        <h4>Registro de eventos</h4>
+        <ul>
+          <li *ngFor="let event of eventLog()">{{ event.message }}</li>
+        </ul>
+      </div>
+    </aside>
+
+    <div class="canvas-wrap">
+      <canvas
+        #worldCanvas
+        id="world"
+        [width]="config.worldWidth"
+        [height]="config.worldHeight"
+        [class.placement-active]="placementMode()"
+        (click)="onCanvasClick($event)"
+      ></canvas>
+      @if (placementMode()) {
+        <div class="placement-hint">Hacé click en el mapa para colocar comida</div>
+      }
+    </div>
+  </div>
+</div>

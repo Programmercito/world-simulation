@@ -26,11 +26,13 @@ The server will start on `http://localhost:3000`
 ## API Endpoints
 
 ### Health Check
+
 ```
 GET /api/health
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -43,19 +45,23 @@ Response:
 ```
 
 ### Add Food
+
 ```
 GET /api/food/add/:quantity
 ```
 
 Parameters:
+
 - `quantity` (number): Amount of food items to add (1-1000)
 
 Example:
+
 ```bash
 curl http://localhost:3000/api/food/add/10
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -70,11 +76,13 @@ Response:
 ## WebSocket Messages
 
 ### Client → Server
+
 Clients connect to `ws://localhost:3000`
 
 ### Server → Client
 
 #### Connection Confirmation
+
 ```json
 {
   "type": "CONNECTED",
@@ -86,6 +94,7 @@ Clients connect to `ws://localhost:3000`
 ```
 
 #### Add Food Event
+
 ```json
 {
   "type": "ADD_FOOD",

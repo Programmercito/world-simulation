@@ -1,2 +1,13 @@
-<app-canvas></app-canvas>
+<main class="app-shell">
+  <app-landing (createWorld)="onCreateWorld($event)"></app-landing>
+
+  @if (simulationStarted()) {
+    <section class="world-section" id="world">
+      <app-world-view
+        [config]="worldConfig()"
+        (createWorld)="onCreateWorld($event)"
+      ></app-world-view>
+    </section>
+  }
+</main>
 <router-outlet />

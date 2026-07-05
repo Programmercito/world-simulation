@@ -3,6 +3,7 @@
 ## Inicio Rápido
 
 ### 1. Instalar Dependencias del Servidor
+
 ```bash
 cd server
 npm install
@@ -10,6 +11,7 @@ cd ..
 ```
 
 ### 2. Ejecutar Todo
+
 ```bash
 npm run dev:all
 ```
@@ -17,12 +19,14 @@ npm run dev:all
 O ejecutar por separado:
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd server
 npm start
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 npm start
 ```
@@ -75,13 +79,16 @@ HTTP Request → Express Server → WebSocket Broadcast → Angular App → Canv
 ## Troubleshooting
 
 **Error: EADDRINUSE**
+
 - El puerto 3000 está ocupado
 - Cambia el puerto en `server/src/server.ts`
 
 **WebSocket no conecta**
+
 - Verifica que el servidor backend esté corriendo
 - Revisa la consola del navegador para errores
 
 **No aparece comida**
+
 - Asegúrate de haber iniciado la simulación primero
 - Verifica que la cantidad esté entre 1 y 1000

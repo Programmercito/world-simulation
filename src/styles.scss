@@ -1,1 +1,135 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-bg: #05070a;
+  --color-bg-elevated: #0d1117;
+  --color-bg-glass: rgba(13, 17, 23, 0.72);
+  --color-border: rgba(76, 175, 80, 0.25);
+  --color-border-strong: rgba(76, 175, 80, 0.55);
+  --color-primary: #4caf50;
+  --color-primary-light: #6fd876;
+  --color-primary-dark: #388e3c;
+  --color-secondary: #00d4ff;
+  --color-accent: #ff9800;
+  --color-accent-strong: #ff5722;
+  --color-text: #e8ecf1;
+  --color-text-muted: #9fb3c8;
+  --color-text-dim: #5c7a99;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 30px rgba(76, 175, 80, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(76, 175, 80, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 10%, rgba(0, 212, 255, 0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(255, 152, 0, 0.05) 0%, transparent 40%),
+    var(--color-bg);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(76, 175, 80, 0.12) 0%, transparent 2px),
+    radial-gradient(circle at 55% 12%, rgba(0, 212, 255, 0.12) 0%, transparent 2px),
+    radial-gradient(circle at 80% 45%, rgba(255, 152, 0, 0.1) 0%, transparent 2px),
+    radial-gradient(circle at 35% 65%, rgba(76, 175, 80, 0.1) 0%, transparent 2px),
+    radial-gradient(circle at 70% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 2px);
+  background-size:
+    260px 260px,
+    340px 340px,
+    420px 420px,
+    300px 300px,
+    380px 380px;
+  animation: drift 60s linear infinite;
+  opacity: 0.6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  margin: 0 0 0.5em;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-elevated);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(76, 175, 80, 0.35);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(76, 175, 80, 0.55);
+}
+
+@keyframes drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      260px 260px,
+      -340px 340px,
+      420px -420px,
+      -300px 300px,
+      380px 380px;
+  }
+}
