@@ -44,6 +44,17 @@ To execute unit tests with the [Karma](https://karma-runner.github.io) test runn
 ng test
 ```
 
+## Search and sharing
+
+The public URL is `https://simulation.devcito.org/`. The initial HTML contains the page description,
+canonical URL, social preview and structured data; `public/robots.txt` links to the sitemap. The
+social preview source is `public/social-preview.svg` and the published PNG is `public/social-preview.png`.
+
+Run `pnpm run test:seo` after changing the metadata or public URL. If the domain changes, update the
+canonical and social URLs, structured data, `public/CNAME`, `public/robots.txt`, and
+`public/sitemap.xml` together. The landing content is rendered by JavaScript, so indexing depends on
+the crawler being able to render the app; metadata alone does not guarantee search rankings.
+
 ## Running end-to-end tests
 
 For end-to-end (e2e) testing, run:

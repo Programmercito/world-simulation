@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#122b39" />
+      <stop offset="1" stop-color="#050913" />
+    </linearGradient>
+    <radialGradient id="planet" cx=".35" cy=".3" r=".7">
+      <stop stop-color="#65c7b5" />
+      <stop offset=".58" stop-color="#174d58" />
+      <stop offset="1" stop-color="#081622" />
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#a0f7df" />
+      <stop offset="1" stop-color="#46c8c0" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#background)" />
+  <g fill="#a0f7df" opacity=".35">
+    <circle cx="92" cy="170" r="2" />
+    <circle cx="677" cy="98" r="2" />
+    <circle cx="1115" cy="160" r="2" />
+    <circle cx="1050" cy="533" r="2" />
+    <circle cx="599" cy="503" r="2" />
+    <circle cx="80" cy="519" r="2" />
+  </g>
+  <g font-family="Arial, sans-serif">
+    <text x="84" y="106" fill="#a0f7df" font-size="21" font-weight="700" letter-spacing="3">
+      ✦ WORLD SIMULATION
+    </text>
+    <text x="84" y="250" fill="#f2fbfa" font-size="75" font-weight="700">Un universo,</text>
+    <text x="84" y="337" fill="#86f2d5" font-size="75" font-weight="700">infinitas historias.</text>
+    <text x="86" y="402" fill="#bfd1d8" font-size="25">
+      Creá civilizaciones y observá la vida artificial
+    </text>
+    <text x="86" y="439" fill="#bfd1d8" font-size="25">evolucionar en tu propio mundo.</text>
+    <text x="86" y="555" fill="#9ab4c1" font-size="18" font-weight="700" letter-spacing="2">
+      SIMULATION.DEVCITO.ORG
+    </text>
+  </g>
+  <circle
+    cx="920"
+    cy="318"
+    r="226"
+    fill="none"
+    stroke="#6de5cf"
+    stroke-opacity=".16"
+    stroke-width="2"
+  />
+  <circle
+    cx="920"
+    cy="318"
+    r="190"
+    fill="none"
+    stroke="#6de5cf"
+    stroke-opacity=".2"
+    stroke-width="2"
+    stroke-dasharray="8 12"
+  />
+  <circle
+    cx="920"
+    cy="318"
+    r="150"
+    fill="url(#planet)"
+    stroke="#a0f7df"
+    stroke-opacity=".7"
+    stroke-width="3"
+  />
+  <g fill="none" stroke="#a0f7df" stroke-opacity=".24" stroke-width="2">
+    <path
+      d="M770 318h300M920 168c-47 42-69 93-69 150s22 108 69 150M920 168c47 42 69 93 69 150s-22 108-69 150"
+    />
+    <ellipse cx="920" cy="318" rx="150" ry="65" />
+  </g>
+  <ellipse
+    cx="920"
+    cy="318"
+    rx="208"
+    ry="76"
+    transform="rotate(-25 920 318)"
+    fill="none"
+    stroke="url(#accent)"
+    stroke-opacity=".75"
+    stroke-width="4"
+  />
+  <g fill="#b9ffeb">
+    <circle cx="858" cy="252" r="6" />
+    <circle cx="970" cy="337" r="5" />
+    <circle cx="880" cy="388" r="4" />
+  </g>
+</svg>
