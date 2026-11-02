@@ -58,4 +58,50 @@ describe('SimulationService food mechanics', () => {
 
     expect(service.getEventLog().length).toBeLessThanOrEqual(5);
   });
+
+  it('moves an individual toward its chosen mate', () => {
+    const world = service['world'];
+    const [individual, mate] = world.individuals;
+    Object.assign(individual, { x: 100, y: 100, currentState: 'seekingMate', targetId: mate.id });
+    Object.assign(mate, { x: 200, y: 100 });
+
+    service['moveIndividual'](individual);
+    expect(individual.x).toBeGreaterThan(100);
+    expect(individual.y).toBe(100);
+  });
+
+  it('recovers energy while resting without moving', () => {
+    const individual = service['world'].individuals[0];
+    Object.assign(individual, { x: 100, y: 100, energy: 15, hunger: 0, age: 1 });
+    service['world'].individuals = [individual];
+    service['update']();
+
+    expect(individual.currentState).toBe('resting');
+    expect(individual.energy).toBeGreaterThan(15);
+    expect(individual.x).toBe(100);
+    expect(individual.y).toBe(100);
+  });
+
+  it('does not reproduce twice with the same parent in one tick', () => {
+    const world = service['world'];
+    const parents = world.individuals.slice(0, 3);
+    world.individuals = parents;
+    world.tick = 100;
+    for (const parent of parents) {
+      Object.assign(parent, {
+        civilizationId: 'same',
+        x: 100,
+        y: 100,
+        currentState: 'seekingMate',
+        energy: 100,
+        hunger: 0,
+        cooldownUntil: 0,
+        targetId: undefined,
+      });
+    }
+
+    service['handleReproduction']();
+    expect(world.individuals.length).toBe(4);
+    expect(parents.reduce((total, parent) => total + parent.offspringCount, 0)).toBe(2);
+  });
 });

@@ -77,6 +77,18 @@ describe('WorldView', () => {
     expect(mockWsService.connect).toHaveBeenCalled();
   });
 
+  it('exposes accessible labels and placement mode state', () => {
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector(
+      '[data-testid="togglePlacement"]',
+    ) as HTMLButtonElement;
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(fixture.nativeElement.querySelector('canvas').getAttribute('aria-label')).toBeTruthy();
+    button.click();
+    fixture.detectChanges();
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('stops the service and disconnects on destroy', () => {
     fixture.detectChanges();
     fixture.destroy();

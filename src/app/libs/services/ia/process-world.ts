@@ -20,7 +20,11 @@ export class ProcessWorld {
     individual.fearLevel = Math.max(0, individual.fearLevel);
 
     // Si el objetivo de comida ya no existe, lo olvidamos.
-    if (individual.targetId && !world.foodSources.find((f) => f.id === individual.targetId)) {
+    if (
+      individual.currentState === 'seekingFood' &&
+      individual.targetId &&
+      !world.foodSources.some((f) => f.id === individual.targetId && !f.isConsumed)
+    ) {
       individual.targetId = undefined;
       individual.currentState = 'wandering';
     }
@@ -42,6 +46,16 @@ export class ProcessWorld {
       individual.currentState = 'fleeing';
       individual.targetId = undefined;
       return; // Salir temprano, el miedo domina todo
+    }
+
+    if (
+      individual.hunger < 70 &&
+      (individual.energy < 25 || (individual.currentState === 'resting' && individual.energy < 45))
+    ) {
+      individual.currentState = 'resting';
+      individual.targetId = undefined;
+      individual.explorationTarget = undefined;
+      return;
     }
 
     // PRIORIDAD 1: Reproducción cuando están bien alimentados y tienen edad
@@ -101,13 +115,11 @@ export class ProcessWorld {
         // Hambre normal, explorar inteligentemente
         this.exploreWithMemory(individual, world);
       }
-    } else if (
-      individual.dna.aggression > 0.7 &&
-      individual.energy > 40 &&
-      individual.hunger < 80
-    ) {
-      // NUEVO: Criaturas agresivas cazan incluso sin hambre extrema
-      const prey = this.findWeakestPrey(individual, world, effectiveVisionRange);
+    } else {
+      const prey =
+        individual.dna.aggression > 0.7 && individual.energy > 40
+          ? this.findWeakestPrey(individual, world, effectiveVisionRange)
+          : null;
       if (prey) {
         individual.currentState = 'hunting';
         individual.targetId = prey.id;
@@ -117,7 +129,6 @@ export class ProcessWorld {
         );
         return; // Salir temprano para priorizar la caza
       }
-    } else {
       // PRIORIDAD 3: Deambular o seguir al grupo (cuando están satisfechos)
       if (individual.socialBond) {
         const bondedIndividual = world.individuals.find(
@@ -142,7 +153,7 @@ export class ProcessWorld {
       } else {
         individual.currentState = 'wandering';
       }
-      individual.targetId = undefined;
+      if (individual.currentState !== 'following') individual.targetId = undefined;
       individual.explorationTarget = undefined;
     }
   }
@@ -154,7 +165,7 @@ export class ProcessWorld {
         other.isAlive &&
         other.id !== individual.id &&
         other.civilizationId !== individual.civilizationId &&
-        other.dna.aggression > 0.7 &&
+        this.isThreat(individual, other) &&
         Math.hypot(individual.x - other.x, individual.y - other.y) < visionRange * 0.8,
     );
 
@@ -163,9 +174,21 @@ export class ProcessWorld {
     }
   }
 
+  public isThreat(individual: Individual, other: Individual): boolean {
+    return (
+      other.isAlive &&
+      other.civilizationId !== individual.civilizationId &&
+      (other.dna.aggression > 0.7 ||
+        (other.currentState === 'hunting' && other.targetId === individual.id))
+    );
+  }
+
   private rememberFoodLocation(individual: Individual, x: number, y: number, tick: number): void {
     if (!individual.lastFoodLocations) individual.lastFoodLocations = [];
 
+    individual.lastFoodLocations = individual.lastFoodLocations.filter(
+      (location) => Math.hypot(location.x - x, location.y - y) > 25,
+    );
     // Agregar nueva ubicación
     individual.lastFoodLocations.push({ x, y, timestamp: tick });
 
@@ -177,6 +200,21 @@ export class ProcessWorld {
 
   private exploreWithMemory(individual: Individual, world: World): void {
     individual.currentState = 'exploring';
+    individual.targetId = undefined;
+    individual.lastFoodLocations = (individual.lastFoodLocations ?? []).filter(
+      (location) =>
+        world.tick - location.timestamp < 600 &&
+        Math.hypot(individual.x - location.x, individual.y - location.y) >= 50,
+    );
+    if (
+      individual.explorationTarget &&
+      Math.hypot(
+        individual.x - individual.explorationTarget.x,
+        individual.y - individual.explorationTarget.y,
+      ) < 50
+    ) {
+      individual.explorationTarget = undefined;
+    }
 
     // Si tiene memoria de comida, ir a esas ubicaciones primero
     if (individual.lastFoodLocations && individual.lastFoodLocations.length > 0) {

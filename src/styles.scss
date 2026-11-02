@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --color-bg: #05070a;
-  --color-bg-elevated: #0d1117;
-  --color-bg-glass: rgba(13, 17, 23, 0.72);
-  --color-border: rgba(76, 175, 80, 0.25);
-  --color-border-strong: rgba(76, 175, 80, 0.55);
-  --color-primary: #4caf50;
-  --color-primary-light: #6fd876;
-  --color-primary-dark: #388e3c;
-  --color-secondary: #00d4ff;
-  --color-accent: #ff9800;
-  --color-accent-strong: #ff5722;
-  --color-text: #e8ecf1;
-  --color-text-muted: #9fb3c8;
-  --color-text-dim: #5c7a99;
+  --color-bg: #050913;
+  --color-bg-elevated: #101a2a;
+  --color-bg-glass: rgba(13, 24, 39, 0.82);
+  --color-border: rgba(126, 181, 193, 0.18);
+  --color-border-strong: rgba(101, 240, 203, 0.55);
+  --color-primary: #50e8bc;
+  --color-primary-light: #a0f7df;
+  --color-primary-dark: #19a99c;
+  --color-secondary: #72d9f3;
+  --color-accent: #ffd28b;
+  --color-accent-strong: #e69b55;
+  --color-text: #edf7f8;
+  --color-text-muted: #b0c5d0;
+  --color-text-dim: #8ba1af;
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --radius-sm: 8px;
@@ -95,6 +95,22 @@ p {
 
 button {
   font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 ::-webkit-scrollbar {

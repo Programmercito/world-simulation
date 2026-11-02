@@ -1,6 +1,7 @@
 <div class="world-view">
   <div class="world-header">
     <div>
+      <span class="section-kicker">CENTRO DE CONTROL / MUNDO ARTIFICIAL</span>
       <h2 class="world-title">Vista del mundo</h2>
       <p class="world-subtitle">
         Usá los controles laterales para manipular la comida o activá el modo colocación.
@@ -39,9 +40,21 @@
           <div class="food-interval-control">
             <span class="control-label">Comida automática</span>
             <div class="interval-controls">
-              <button class="interval-btn" (click)="decreaseFoodInterval()">-</button>
+              <button
+                class="interval-btn"
+                aria-label="Reducir intervalo de comida automática"
+                (click)="decreaseFoodInterval()"
+              >
+                -
+              </button>
               <span class="interval-value">{{ currentFoodInterval() }}s</span>
-              <button class="interval-btn" (click)="increaseFoodInterval()">+</button>
+              <button
+                class="interval-btn"
+                aria-label="Aumentar intervalo de comida automática"
+                (click)="increaseFoodInterval()"
+              >
+                +
+              </button>
             </div>
           </div>
 
@@ -64,6 +77,7 @@
             class="placement-toggle"
             data-testid="togglePlacement"
             [class.active]="placementMode()"
+            [attr.aria-pressed]="placementMode()"
             (click)="togglePlacementMode()"
           >
             {{ placementMode() ? 'Cancelar colocación' : 'Colocar comida manual' }}
@@ -85,6 +99,7 @@
 
       <div class="panel event-log">
         <h4>Registro de eventos</h4>
+        <p class="empty-events" *ngIf="eventLog().length === 0">Los eventos aparecerán acá.</p>
         <ul>
           <li *ngFor="let event of eventLog()">{{ event.message }}</li>
         </ul>
@@ -95,6 +110,7 @@
       <canvas
         #worldCanvas
         id="world"
+        aria-label="Mapa de la simulación del mundo"
         [width]="config.worldWidth"
         [height]="config.worldHeight"
         [class.placement-active]="placementMode()"

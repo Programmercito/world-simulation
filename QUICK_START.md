@@ -22,14 +22,14 @@ O ejecutar por separado:
 
 ```bash
 cd server
-npm start 
+npm start
 ```
 
 **Terminal 2 - Frontend:**
 
 ```bash
 npm start
-``` 
+```
 
 ## Uso del API
 
@@ -72,9 +72,19 @@ HTTP Request → Express Server → WebSocket Broadcast → Angular App → Canv
 ## Verificación
 
 1. Abre `http://localhost:4200`
-2. Inicia la simulación
+2. Configura el mundo e inicia la simulación
 3. En otra terminal: `curl http://localhost:3000/api/food/add/20`
 4. Observa cómo aparecen 20 comidas nuevas en el canvas
+
+## Comportamiento de los individuos
+
+- Los individuos hambrientos buscan comida visible y recuerdan ubicaciones recientes. Si llegan a
+  una ubicación vacía, continúan explorando.
+- Cuando tienen poca energía descansan, salvo que el hambre sea crítica; también reaccionan a
+  enemigos agresivos o que los estén cazando.
+- Los compañeros vinculados se siguen, y los individuos que buscan pareja se acercan a ella.
+
+Son reglas de simulación, no un modelo predictivo del comportamiento de seres vivos reales.
 
 ## Troubleshooting
 

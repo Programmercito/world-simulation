@@ -226,6 +226,9 @@ export class SimulationService {
           : 0.025;
       individual.hunger += hungerIncrease; // Lógica de estado (IA simple)
       this.processWorld.processIndividual(individual, this.world);
+      if (individual.currentState === 'resting') {
+        individual.energy = Math.min(100, individual.energy + 0.1);
+      }
 
       // Mover al individuo
       this.moveIndividual(individual);
@@ -817,8 +820,7 @@ export class SimulationService {
       // Huir en dirección opuesta a las amenazas
       const threats = this.world.individuals.filter(
         (other) =>
-          other.isAlive &&
-          other.civilizationId !== individual.civilizationId &&
+          this.processWorld.isThreat(individual, other) &&
           Math.hypot(individual.x - other.x, individual.y - other.y) < individual.visionRange,
       );
 
@@ -847,7 +849,10 @@ export class SimulationService {
         moveX = (Math.random() - 0.5) * individual.speed;
         moveY = (Math.random() - 0.5) * individual.speed;
       }
-    } else if (individual.currentState === 'following' && individual.targetId) {
+    } else if (
+      (individual.currentState === 'following' || individual.currentState === 'seekingMate') &&
+      individual.targetId
+    ) {
       // Seguir a otro individuo (comportamiento social)
       const target = this.world.individuals.find((i) => i.id === individual.targetId && i.isAlive);
       if (target) {
@@ -861,6 +866,8 @@ export class SimulationService {
           moveY = (dy / distance) * individual.speed * 0.8;
         }
       }
+    } else if (individual.currentState === 'resting') {
+      return;
     } else if (individual.currentState === 'seekingFood' && individual.targetId) {
       const targetFood = this.world.foodSources.find((f) => f.id === individual.targetId);
       if (targetFood) {
@@ -1035,11 +1042,16 @@ export class SimulationService {
 
     for (let i = 0; i < readyToMate.length; i++) {
       const ind1 = readyToMate[i];
+      if (ind1.cooldownUntil >= this.world.tick) continue;
 
       // Si tiene un targetId específico (pareja seleccionada), solo reproducirse con ese
       if (ind1.targetId) {
         const ind2 = readyToMate.find((other) => other.id === ind1.targetId);
-        if (ind2 && ind1.civilizationId === ind2.civilizationId) {
+        if (
+          ind2 &&
+          ind2.cooldownUntil < this.world.tick &&
+          ind1.civilizationId === ind2.civilizationId
+        ) {
           const distance = Math.hypot(ind1.x - ind2.x, ind1.y - ind2.y);
           if (distance < (ind1.size + ind2.size) * 2.5) {
             this.reproduce(ind1, ind2);
@@ -1051,7 +1063,9 @@ export class SimulationService {
       // Buscar pareja cercana compatible
       for (let j = i + 1; j < readyToMate.length; j++) {
         const ind2 = readyToMate[j];
-        if (ind1.civilizationId !== ind2.civilizationId) continue;
+        if (ind2.cooldownUntil >= this.world.tick || ind1.civilizationId !== ind2.civilizationId) {
+          continue;
+        }
 
         const distance = Math.hypot(ind1.x - ind2.x, ind1.y - ind2.y);
         if (distance < (ind1.size + ind2.size) * 2.5) {

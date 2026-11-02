@@ -3,11 +3,19 @@
   flex-direction: column;
   gap: 20px;
   padding: clamp(16px, 3vw, 28px);
-  background: var(--color-bg-glass);
+  background: linear-gradient(145deg, rgba(18, 35, 51, 0.96), rgba(7, 15, 27, 0.98));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(14px);
   box-shadow: var(--shadow-md);
+}
+
+.section-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-primary);
+  font: 600 0.65rem var(--font-display);
+  letter-spacing: 0.16em;
 }
 
 .world-header {
@@ -78,8 +86,8 @@
 }
 
 .panel {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(6, 15, 27, 0.7);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 18px;
   color: var(--color-text);
@@ -293,6 +301,12 @@
 }
 
 .event-log {
+  .empty-events {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
   ul {
     list-style: none;
     margin: 0;
@@ -328,7 +342,7 @@
 canvas {
   display: block;
   max-width: 100%;
-  border: 2px solid #444;
+  border: 1px solid rgba(114, 217, 243, 0.3);
   border-radius: var(--radius-md);
   background-color: #222;
   cursor: crosshair;
@@ -338,6 +352,12 @@ canvas {
     cursor: cell;
     border-color: var(--color-accent);
     box-shadow: 0 0 24px rgba(255, 152, 0, 0.25);
+  }
+}
+
+@media (max-width: 1024px) {
+  .canvas-wrap {
+    order: -1;
   }
 }
 

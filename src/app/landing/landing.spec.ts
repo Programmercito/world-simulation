@@ -41,6 +41,14 @@ describe('Landing', () => {
     expect(compiled.querySelector('app-world-config')).toBeTruthy();
   });
 
+  it('links the main call to action to the configuration form', () => {
+    const link = fixture.nativeElement.querySelector(
+      '[data-testid="cta-btn"]',
+    ) as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('#config');
+    expect(fixture.nativeElement.querySelector('#config app-world-config')).toBeTruthy();
+  });
+
   it('forwards create-world events from the config panel', () => {
     const createSpy = jasmine.createSpy('createWorld');
     component.createWorld.subscribe(createSpy);
