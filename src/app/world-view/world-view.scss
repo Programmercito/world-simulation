@@ -3,8 +3,10 @@
   flex-direction: column;
   gap: 20px;
   padding: clamp(16px, 3vw, 28px);
-  background: linear-gradient(145deg, rgba(18, 35, 51, 0.96), rgba(7, 15, 27, 0.98));
-  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at top right, rgba(80, 232, 188, 0.08), transparent 40%),
+    linear-gradient(145deg, rgba(18, 35, 51, 0.96), rgba(7, 15, 27, 0.98));
+  border: 1px solid rgba(135, 223, 215, 0.22);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(14px);
   box-shadow: var(--shadow-md);
@@ -114,7 +116,7 @@
   align-items: center;
   gap: 4px;
   padding: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(145deg, rgba(85, 180, 170, 0.1), rgba(255, 255, 255, 0.025));
   border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.06);
   transition: background 0.2s ease;

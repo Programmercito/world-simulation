@@ -33,6 +33,29 @@ describe('App', () => {
     expect(compiled.querySelector('app-landing')).toBeTruthy();
   });
 
+  it('keeps the Devcito credit at the end of the page before and after starting a world', fakeAsync(() => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const footer = compiled.querySelector('footer');
+    expect(footer?.textContent).toContain('Hecho con');
+    expect(footer?.textContent).toContain('Devcito');
+    expect(footer?.querySelector('[aria-label="amor"]')).toBeTruthy();
+
+    component.onCreateWorld({
+      worldWidth: 800,
+      worldHeight: 600,
+      initialFood: 10,
+      initialCivilizations: 2,
+      initialIndividuals: 4,
+      foodSpawnInterval: 30,
+    });
+    tick();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-world-view')).toBeTruthy();
+    expect(compiled.querySelector('main')?.lastElementChild).toBe(footer);
+  }));
+
   it('renders the world view below the landing after a create-world event', fakeAsync(() => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;

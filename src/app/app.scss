@@ -9,6 +9,71 @@
   animation: sectionReveal 0.7s ease-out;
 }
 
+.site-footer {
+  margin-top: auto;
+  padding: 0 clamp(16px, 4vw, 48px) 28px;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 26px 0 0;
+  border-top: 1px solid rgba(135, 223, 215, 0.18);
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font: 600 0.65rem var(--font-display);
+  letter-spacing: 0.14em;
+}
+
+.footer-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.footer-credit {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+
+  span {
+    display: inline-block;
+    color: #ff7299;
+    text-shadow: 0 0 18px rgba(255, 114, 153, 0.65);
+  }
+
+  strong {
+    color: var(--color-text);
+  }
+}
+
+.footer-caption {
+  color: var(--color-text-dim);
+  font: 600 0.6rem var(--font-display);
+  letter-spacing: 0.14em;
+}
+
+@media (max-width: 700px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
 @keyframes sectionReveal {
   from {
     opacity: 0;
